@@ -1,0 +1,10 @@
+__pycache__/
+*.pyc
+*.pyd
+.venv/
+research/
+qa/
+**/.cisco-pkt-cache/
+cisco-pkt-builder/templates/
+cisco-pkt-builder/examples/generated-*/
+hasil/

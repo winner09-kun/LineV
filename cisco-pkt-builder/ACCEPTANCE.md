@@ -1,0 +1,40 @@
+# Status penerimaan PRD
+
+Tanggal 25 Oktober 2026. Kandidat MVP; pembukaan aplikasi belum terverifikasi.
+
+## Alur pengguna
+
+Pengguna menjelaskan jaringan ke agent. Agent membuat spec kecil atau memilih preset. Build mencari instalasi Packet Tracer dan mengekstrak struktur model dari contoh bawaan secara otomatis ke cache lokal. Pengguna tidak diminta menyiapkan template. Python 3.10+ dan Packet Tracer dengan contoh model yang dibutuhkan merupakan prasyarat.
+
+## Bukti pengujian
+
+Bootstrap berhasil pada instalasi Packet Tracer 9.0.0 Windows setelah memeriksa 75 sampel bawaan. Empat model ditemukan: 2911, 2960-24TT, PC-PT dan Server-PT. Seed sampel bertag 7.1.0.0000; versi file sampel bukan klaim versi aplikasi yang telah menerima output.
+
+Seluruh 20 tes lulus. Tes mencakup tiga contoh round-trip, determinisme dengan cache yang sama, duplicate IP/port/link, gateway, VLAN/trunk, OSPF, DHCP/routing statis, integritas codec/cache, batas path, no-overwrite, preset, dan rebuild spec normalisasi.
+
+Waktu sekitar 1,6 detik per contoh pada implementasi template lama adalah hasil historis; bukan benchmark bootstrap baru. Cache berbeda dapat menghasilkan XML berbeda karena donor perangkat berbeda. Input dan cache yang sama menghasilkan output deterministik.
+
+## Kebutuhan
+
+| ID | Hasil implementasi |
+|---|---|
+| FR-1 | Spec ke XML dan .pkt; round-trip teruji, GUI belum |
+| FR-2 | Router 2911, switch 2960-24TT, PC dan server |
+| FR-3 | Kabel straight/cross otomatis dan override |
+| FR-4 | Hostname dan IPv4/gateway |
+| FR-5 | VLAN, trunk, access port melalui CLI |
+| FR-6 | Routing statis dan OSPF melalui CLI |
+| FR-7 | DHCP router lokal; NAT belum |
+| FR-8 | Decode/encode dan rebuild spec; edit generik .pkt belum |
+| FR-9 | Validasi spec/XML dan round-trip |
+| FR-10 | Ringkasan perangkat, tabel IP, link dan file CLI |
+
+## Batas penerimaan
+
+- Dua percobaan peluncuran PT melalui alat otomasi tidak menghasilkan jendela yang dapat ditarget. File belum dibuktikan terbuka atau menerapkan CLI. Uji ping bukan bagian wajib MVP.
+- Instalasi bersih dan pemanggilan oleh orang lain pada Codex/Antigravity belum diuji. Deteksi instalasi Linux/macOS belum diuji.
+- Tiga YAML disertakan. Hasil .pkt/XML dibuat lokal, tidak didistribusikan di GitHub/ZIP. Ini perubahan pengemasan dari PRD agar bahan Cisco tidak ikut dipublikasikan.
+- Cache dan hasil lokal tidak memiliki izin distribusi tambahan dari lisensi kode paket. Jangan unggah otomatis.
+- Metrik 100% file terbuka dan 90% dari 10 skenario belum terbukti. Tiga donor manual buatan sendiri belum dibuat; bootstrap menggunakan contoh bawaan instalasi.
+- Fallback JavaScript belum tersedia; fallback saat gagal adalah spec, ringkasan dan CLI, bukan API PT tebakan.
+- Efisiensi token memakai preset, pembacaan referensi sesuai kebutuhan, cache lokal dan laporan JSON singkat; persentase penghematan belum diukur.

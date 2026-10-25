@@ -1,0 +1,28 @@
+name: lab-vlan
+devices:
+  - id: SW1
+    type: switch
+    position: [220, 160]
+    vlans: {10: DATA, 20: STAFF}
+    ports:
+      Gi0/1: {mode: trunk, allowed_vlans: [10, 20]}
+      Fa0/1: {mode: access, vlan: 10}
+      Fa0/2: {mode: access, vlan: 20}
+  - id: SW2
+    type: switch
+    position: [600, 160]
+    vlans: {10: DATA, 20: STAFF}
+    ports:
+      Gi0/1: {mode: trunk, allowed_vlans: [10, 20]}
+      Fa0/1: {mode: access, vlan: 10}
+      Fa0/2: {mode: access, vlan: 20}
+  - {id: PC1, type: pc, position: [120, 360], ip: 192.168.10.10/24}
+  - {id: PC2, type: pc, position: [320, 360], ip: 192.168.20.10/24}
+  - {id: PC3, type: pc, position: [500, 360], ip: 192.168.10.11/24}
+  - {id: SRV1, type: server, position: [700, 360], ip: 192.168.20.11/24}
+links:
+  - [SW1:Gi0/1, SW2:Gi0/1]
+  - [SW1:Fa0/1, PC1:Fa0]
+  - [SW1:Fa0/2, PC2:Fa0]
+  - [SW2:Fa0/1, PC3:Fa0]
+  - [SW2:Fa0/2, SRV1:Fa0]

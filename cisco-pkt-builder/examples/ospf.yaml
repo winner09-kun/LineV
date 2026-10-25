@@ -1,0 +1,28 @@
+name: lab-ospf
+devices:
+  - id: R1
+    type: router
+    position: [200, 120]
+    interfaces: {Gi0/0: 10.0.12.1/30, Gi0/1: 192.168.10.1/24}
+    config:
+      ospf: {process: 1, networks: [10.0.12.0/30, 192.168.10.0/24], area: 0}
+  - id: R2
+    type: router
+    position: [600, 120]
+    interfaces: {Gi0/0: 10.0.12.2/30, Gi0/1: 192.168.20.1/24}
+    config:
+      ospf: {process: 1, networks: [10.0.12.0/30, 192.168.20.0/24], area: 0}
+  - {id: SW1, type: switch, position: [200, 280]}
+  - {id: SW2, type: switch, position: [600, 280]}
+  - {id: PC1, type: pc, position: [100, 450], ip: 192.168.10.10/24, gateway: 192.168.10.1}
+  - {id: PC2, type: pc, position: [300, 450], ip: 192.168.10.11/24, gateway: 192.168.10.1}
+  - {id: PC3, type: pc, position: [500, 450], ip: 192.168.20.10/24, gateway: 192.168.20.1}
+  - {id: PC4, type: pc, position: [700, 450], ip: 192.168.20.11/24, gateway: 192.168.20.1}
+links:
+  - [R1:Gi0/0, R2:Gi0/0]
+  - [R1:Gi0/1, SW1:Gi0/1]
+  - [R2:Gi0/1, SW2:Gi0/1]
+  - [SW1:Fa0/1, PC1:Fa0]
+  - [SW1:Fa0/2, PC2:Fa0]
+  - [SW2:Fa0/1, PC3:Fa0]
+  - [SW2:Fa0/2, PC4:Fa0]

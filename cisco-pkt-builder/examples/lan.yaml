@@ -1,0 +1,23 @@
+name: lab-lan
+devices:
+  - id: R1
+    type: router
+    position: [350, 100]
+    interfaces: {Gi0/0: 192.168.10.1/24}
+  - id: SW1
+    type: switch
+    position: [350, 260]
+  - id: PC1
+    type: pc
+    position: [200, 420]
+    ip: 192.168.10.10/24
+    gateway: 192.168.10.1
+  - id: PC2
+    type: pc
+    position: [500, 420]
+    ip: 192.168.10.11/24
+    gateway: 192.168.10.1
+links:
+  - [R1:Gi0/0, SW1:Gi0/1]
+  - [SW1:Fa0/1, PC1:Fa0]
+  - [SW1:Fa0/2, PC2:Fa0]
