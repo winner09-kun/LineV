@@ -44,23 +44,24 @@ def installation(explicit=None):
             return p.resolve()
     raise ValueError("Instalasi Packet Tracer tidak ditemukan. Instal melalui Cisco atau berikan --pt-install PATH; pengguna tidak perlu menyediakan template.")
 
-def cached(directory):
+def cached(directory, serial=False):
     try:
         manifest = json.loads((directory / "manifest.json").read_text(encoding="utf-8"))
         if manifest.get("schema") != CACHE_SCHEMA:
             return False
-        return all(hashlib.sha256((directory / name).read_bytes()).hexdigest() == manifest["sha256"][name] for name in FILES)
+        required = FILES + (("HWIC-2T.xml",) if serial else ())
+        return all(hashlib.sha256((directory / name).read_bytes()).hexdigest() == manifest["sha256"][name] for name in required)
     except (OSError, ValueError, KeyError, TypeError):
         return False
 
-def prepare(workspace=".", pt_install=None, *, max_files=500, timeout=120):
+def prepare(workspace=".", pt_install=None, *, max_files=500, timeout=120, serial=False):
     directory = local_path(".cisco-pkt-cache", workspace)
-    if cached(directory):
+    if cached(directory, serial):
         return directory
     root = installation(pt_install)
     # Read only the application's bundled samples, never Downloads/user labs.
     paths = sorted((p for p in (root / "saves").rglob("*.pkt") if p.is_file()), key=lambda p: (p.stat().st_size, str(p)))
-    models, sources, seed = {}, {}, None
+    models, sources, seed, module = {}, {}, None, None
     version = None
     deadline = time.monotonic() + timeout
     scanned = 0
@@ -76,6 +77,15 @@ def prepare(workspace=".", pt_install=None, *, max_files=500, timeout=120):
             if document.tag != "PACKETTRACER5":
                 continue
             devices = document.findall("NETWORK/DEVICES/DEVICE")
+            if serial and module is None:
+                for slot in document.iter("SLOT"):
+                    if (slot.findtext("TYPE") == "eInterfaceCard"
+                            and slot.findtext("MODULE/MODEL") == "HWIC-2T"
+                            and len(slot.findall("MODULE/PORT")) == 2
+                            and all(p.findtext("TYPE") == "eSmartSerial" for p in slot.findall("MODULE/PORT"))):
+                        module = ET.tostring(slot, encoding="utf-8")
+                        sources["HWIC-2T"] = str(path.relative_to(root))
+                        break
             for device in devices:
                 kind = device.find("ENGINE/TYPE")
                 model = kind.get("model") if kind is not None else None
@@ -96,17 +106,21 @@ def prepare(workspace=".", pt_install=None, *, max_files=500, timeout=120):
                 seed = xml
                 version = document.findtext("VERSION")
                 sources["seed"] = str(path.relative_to(root))
-            if len(models) == len(MODELS) and seed is not None:
+            if len(models) == len(MODELS) and seed is not None and (not serial or module is not None):
                 break
         except (PacketTracerError, ET.ParseError, OSError, ValueError):
             continue
     missing = [m for m in MODELS if m not in models]
+    if serial and module is None:
+        missing.append("HWIC-2T")
     if seed is None:
         missing.append("physical workspace seed dengan link save-ref-id")
     if missing:
         raise ValueError(f"Bootstrap belum lengkap setelah {scanned} sampel: {', '.join(missing)}. Gunakan instalasi PT dengan sampel model tersebut; tidak ada template tebakan yang dibuat.")
     payload = {m + ".xml": data for m, data in models.items()}
     payload["network_seed.xml"] = seed
+    if module is not None:
+        payload["HWIC-2T.xml"] = module
     directory.mkdir(parents=True, exist_ok=True)
     for name, data in payload.items():
         local_path(directory / name, workspace).write_bytes(data)

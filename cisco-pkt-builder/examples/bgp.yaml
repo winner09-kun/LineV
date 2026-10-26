@@ -1,0 +1,66 @@
+# Based on the supplied three-AS diagram. Host addresses are design assumptions.
+# 2911 + HWIC-2T replaces generic Router-PT; port names therefore differ.
+name: lab-bgp
+devices:
+  - id: R1
+    type: router
+    module: HWIC-2T
+    position: [260, 170]
+    interfaces:
+      Gi0/0: 192.168.10.1/24
+      Se0/0/0: 10.10.10.1/30
+    config:
+      bgp:
+        asn: 100
+        networks: [192.168.10.0/24]
+        neighbors: [{ip: 10.10.10.2, remote_as: 200}]
+  - id: R2
+    type: router
+    module: HWIC-2T
+    position: [650, 100]
+    interfaces:
+      Gi0/0: 192.168.20.1/24
+      Se0/0/0: 10.10.10.2/30
+      Se0/0/1: 20.20.20.1/30
+    config:
+      bgp:
+        asn: 200
+        networks: [192.168.20.0/24]
+        neighbors:
+          - {ip: 10.10.10.1, remote_as: 100}
+          - {ip: 20.20.20.2, remote_as: 300}
+  - id: R3
+    type: router
+    module: HWIC-2T
+    position: [1040, 170]
+    interfaces:
+      Gi0/0: 192.168.30.1/24
+      Se0/0/0: 20.20.20.2/30
+    config:
+      bgp:
+        asn: 300
+        networks: [192.168.30.0/24]
+        neighbors: [{ip: 20.20.20.1, remote_as: 200}]
+  - {id: SW1, type: switch, position: [260, 340]}
+  - {id: SW2, type: switch, position: [650, 340]}
+  - {id: SW3, type: switch, position: [1040, 340]}
+  - {id: PC6, type: pc, position: [140, 520], ip: 192.168.10.10/24, gateway: 192.168.10.1}
+  - {id: PC7, type: pc, position: [260, 520], ip: 192.168.10.11/24, gateway: 192.168.10.1}
+  - {id: PC1, type: pc, position: [380, 520], ip: 192.168.10.12/24, gateway: 192.168.10.1}
+  - {id: PC2, type: pc, position: [590, 520], ip: 192.168.20.10/24, gateway: 192.168.20.1}
+  - {id: PC3, type: pc, position: [710, 520], ip: 192.168.20.11/24, gateway: 192.168.20.1}
+  - {id: PC4, type: pc, position: [980, 520], ip: 192.168.30.10/24, gateway: 192.168.30.1}
+  - {id: PC5, type: pc, position: [1100, 520], ip: 192.168.30.11/24, gateway: 192.168.30.1}
+links:
+  - {from: 'R1:Se0/0/0', to: 'R2:Se0/0/0', cable: serial, dce: from, clock_rate: 64000}
+  - {from: 'R2:Se0/0/1', to: 'R3:Se0/0/0', cable: serial, dce: from, clock_rate: 64000}
+  - ['R1:Gi0/0', 'SW1:Fa0/1']
+  - ['R2:Gi0/0', 'SW2:Fa0/1']
+  - ['R3:Gi0/0', 'SW3:Fa0/1']
+  - ['SW1:Fa0/2', 'PC6:Fa0']
+  - ['SW1:Fa0/3', 'PC7:Fa0']
+  - ['SW1:Fa0/4', 'PC1:Fa0']
+  - ['SW2:Fa0/2', 'PC2:Fa0']
+  - ['SW2:Fa0/3', 'PC3:Fa0']
+  - ['SW3:Fa0/2', 'PC4:Fa0']
+  - ['SW3:Fa0/3', 'PC5:Fa0']

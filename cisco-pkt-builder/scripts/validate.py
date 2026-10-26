@@ -25,15 +25,15 @@ def token(value, context):
 
 def port_name(value):
     require(isinstance(value, str), "Nama port harus teks")
-    for short, full in (("Gi", "GigabitEthernet"), ("Fa", "FastEthernet")):
+    for short, full in (("Gi", "GigabitEthernet"), ("Fa", "FastEthernet"), ("Se", "Serial")):
         if re.fullmatch(short + r"\d+(?:/\d+)*", value):
             return full + value[len(short):]
     return value
 
-def ports(model):
+def ports(model, serial=False):
     # These PT modules encode names implicitly by model and slot order.
     if model == "2911":
-        return {f"GigabitEthernet0/{i}" for i in range(3)}
+        return {f"GigabitEthernet0/{i}" for i in range(3)} | ({"Serial0/0/0", "Serial0/0/1"} if serial else set())
     if model == "2960-24TT":
         return {f"FastEthernet0/{i}" for i in range(1, 25)} | {"GigabitEthernet0/1", "GigabitEthernet0/2"}
     return {"FastEthernet0"}
@@ -57,7 +57,7 @@ def normalize(spec):
     require(isinstance(s.get("links", []), list), "links harus list")
     devices, used_ips = {}, {}
     for i, d in enumerate(s["devices"]):
-        keys(d, "id type model position interfaces config vlans ports ip gateway", "device")
+        keys(d, "id type model position interfaces config vlans ports ip gateway module", "device")
         name = token(d.get("id"), "device.id")
         require(name not in devices, f"ID ganda: {name}")
         require(d.get("type") in MODELS, f"{name}: tipe tidak didukung")
@@ -66,7 +66,8 @@ def normalize(spec):
         require(d["model"] == MODELS[d["type"]], f"{name}: model MVP tidak didukung {model}")
         d.setdefault("position", [160 + (i % 5) * 220, 130 + (i // 5) * 200])
         require(isinstance(d["position"], list) and len(d["position"]) == 2 and all(type(n) in (int, float) and math.isfinite(n) and 0 <= n <= 3800 for n in d["position"]), f"{name}: position tidak valid")
-        valid_ports = ports(d["model"])
+        require("module" not in d or (d["model"] == "2911" and d["module"] == "HWIC-2T"), "Module hanya HWIC-2T pada 2911 slot 0")
+        valid_ports = ports(d["model"], "module" in d)
         interfaces = d.get("interfaces", {})
         require(isinstance(interfaces, dict), f"{name}: interfaces harus mapping")
         d["interfaces"] = {}
@@ -116,8 +117,24 @@ def normalize(spec):
             require(all(v == 1 or v in d["vlans"] for v in selected), f"{name}: VLAN port belum didefinisikan")
             d["ports"][p] = mode
         config = d.setdefault("config", {})
-        keys(config, "ospf static_routes dhcp", f"{name}.config")
+        keys(config, "ospf static_routes dhcp bgp", f"{name}.config")
         require(not config or d["type"] == "router", "Routing/DHCP hanya pada router")
+        if "bgp" in config:
+            b = config["bgp"]
+            keys(b, "asn networks neighbors", "bgp")
+            require(type(b.get("asn")) is int and 1 <= b["asn"] <= 65535, "BGP ASN harus 1-65535")
+            require(isinstance(b.get("networks"), list) and b["networks"], "BGP networks wajib")
+            connected = {address(a).network for a in d["interfaces"].values()}
+            for network in b["networks"]:
+                require(ip.IPv4Network(network) in connected, "BGP network harus subnet interface lokal (MVP)")
+            require(isinstance(b.get("neighbors"), list) and b["neighbors"], "BGP neighbors wajib")
+            seen = set()
+            for neighbor in b["neighbors"]:
+                keys(neighbor, "ip remote_as", "bgp neighbor")
+                peer = ip.IPv4Address(neighbor["ip"])
+                require(str(peer) not in seen, "BGP neighbor ganda")
+                seen.add(str(peer))
+                require(type(neighbor.get("remote_as")) is int and 1 <= neighbor["remote_as"] <= 65535 and neighbor["remote_as"] != b["asn"], "BGP MVP hanya eBGP dengan remote_as berbeda")
         if "ospf" in config:
             o = config["ospf"]
             keys(o, "process networks area", "ospf")
@@ -153,7 +170,7 @@ def normalize(spec):
         if isinstance(link, list):
             require(len(link) == 2, "Link harus dua endpoint")
             link = {"from": link[0], "to": link[1]}
-        keys(link, "from to cable", "link")
+        keys(link, "from to cable dce clock_rate", "link")
         endpoints = []
         for side in ("from", "to"):
             endpoint = link.get(side)
@@ -161,7 +178,7 @@ def normalize(spec):
             dev, p = endpoint.split(":")
             p = port_name(p)
             require(dev in devices, f"Link yatim: {dev}")
-            require(p in ports(devices[dev]["model"]), f"Port tidak tersedia: {dev}:{p}")
+            require(p in ports(devices[dev]["model"], "module" in devices[dev]), f"Port tidak tersedia: {dev}:{p}")
             endpoint = f"{dev}:{p}"
             require(endpoint not in used_ports, f"Port bentrok: {endpoint}")
             used_ports.add(endpoint)
@@ -169,10 +186,40 @@ def normalize(spec):
             endpoints.append(dev)
         require(endpoints[0] != endpoints[1], "Link ke perangkat sendiri tidak didukung")
         types = [devices[n]["type"] == "switch" for n in endpoints]
-        link.setdefault("cable", "cross" if types[0] == types[1] else "straight")
-        require(link["cable"] in ("cross", "straight"), "cable harus straight/cross")
+        serial_ports = [link[side].split(":")[1].startswith("Serial") for side in ("from", "to")]
+        require(serial_ports[0] == serial_ports[1], "Serial harus terhubung ke port serial")
+        link.setdefault("cable", "serial" if all(serial_ports) else "cross" if types[0] == types[1] else "straight")
+        require(link["cable"] in ("cross", "straight", "serial"), "cable harus straight/cross/serial")
+        require((link["cable"] == "serial") == all(serial_ports), "Jenis kabel tidak cocok dengan port")
+        if link["cable"] == "serial":
+            link.setdefault("dce", "from")
+            link.setdefault("clock_rate", 64000)
+            require(link["dce"] in ("from", "to"), "dce harus from/to")
+            require(type(link["clock_rate"]) is int and link["clock_rate"] in (64000, 128000, 2000000), "clock_rate didukung: 64000, 128000, 2000000")
+        else:
+            require("dce" not in link and "clock_rate" not in link, "Clock/DCE hanya untuk serial")
         links.append(link)
     s["links"] = links
+    # Closed-lab eBGP: peers must really be cabled, addressed and reciprocal.
+    for name, d in devices.items():
+        b = d["config"].get("bgp")
+        if b is None:
+            continue
+        for neighbor in b["neighbors"]:
+            matches = []
+            for link in links:
+                for side, other in (("from", "to"), ("to", "from")):
+                    local, lp = link[side].split(":")
+                    remote, rp = link[other].split(":")
+                    if local != name or lp not in d["interfaces"] or rp not in devices[remote]["interfaces"]:
+                        continue
+                    la, ra = address(d["interfaces"][lp]), address(devices[remote]["interfaces"][rp])
+                    if str(ra.ip) == neighbor["ip"] and la.network == ra.network:
+                        matches.append((devices[remote], str(la.ip)))
+            require(len(matches) == 1, f"{name}: BGP neighbor harus terhubung langsung pada subnet yang sama")
+            peer, local_ip = matches[0]
+            pb = peer["config"].get("bgp", {})
+            require(pb.get("asn") == neighbor["remote_as"] and {"ip": local_ip, "remote_as": b["asn"]} in pb.get("neighbors", []), f"{name}: ASN/neighbor BGP tidak timbal balik")
     return s
 
 def validate_xml(data):
@@ -187,7 +234,11 @@ def validate_xml(data):
         require(sid and sid not in ids and name and name not in names, "ID/nama perangkat XML ganda atau kosong")
         model = d.find("ENGINE/TYPE").get("model")
         require(model in MODELS.values(), f"Model XML belum didukung: {model}")
-        ids[sid] = ports(model)
+        bays = [slot for slot in d.iter("SLOT") if slot.findtext("TYPE") == "eInterfaceCard"]
+        serial = bool(bays and bays[0].findtext("MODULE/MODEL") == "HWIC-2T")
+        if serial:
+            require(model == "2911" and len(bays[0].findall("MODULE/PORT")) == 2 and all(p.findtext("TYPE") == "eSmartSerial" for p in bays[0].findall("MODULE/PORT")), "Modul serial XML tidak valid")
+        ids[sid] = ports(model, serial)
         names.add(name)
         for tag in ("MEM_ADDR", "DEV_ADDR"):
             value = d.findtext("WORKSPACE/LOGICAL/" + tag)
@@ -214,6 +265,11 @@ def validate_xml(data):
         require(c is not None, "Cable XML tidak ada")
         ps = c.findall("PORT")
         require(len(ps) == 2, "Cable XML perlu dua port")
+        is_serial = all((p.text or "").startswith("Serial") for p in ps)
+        require(all((p.text or "").startswith("Serial") == is_serial for p in ps), "Port kabel XML campuran serial/Ethernet")
+        require(link.findtext("TYPE") == ("eSerial" if is_serial else "eCopper"), "Jenis kabel XML tidak cocok")
+        if is_serial:
+            require((c.findtext("DCEDEV"), c.findtext("DCEPORT")) in ((c.findtext("FROM"), ps[0].text), (c.findtext("TO"), ps[1].text)), "Endpoint DCE XML tidak valid")
         for side, p in zip(("FROM", "TO"), ps):
             sid = c.findtext(side)
             require(sid in ids and p.text in ids[sid], "Link XML yatim atau port tidak valid")

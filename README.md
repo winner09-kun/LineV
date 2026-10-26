@@ -1,6 +1,6 @@
 # LineV
 
-Skill untuk membuat lab Cisco Packet Tracer dari deskripsi jaringan melalui YAML atau preset LAN, VLAN, dan OSPF.
+Skill untuk membuat lab Cisco Packet Tracer dari deskripsi jaringan melalui YAML atau preset LAN, VLAN, OSPF, dan eBGP dengan kabel serial (`/pkt bgp`).
 
 ## Instalasi singkat
 

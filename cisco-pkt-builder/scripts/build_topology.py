@@ -49,9 +49,9 @@ def clean_seed(root):
                             current.append(copy.deepcopy(option))
                     set_text(environment, "TIME_IN_SECONDS", "0")
 
-def device_addresses(index, model):
+def device_addresses(index, model, serial=False):
     base = 1_000_000 + index * 1000
-    return base, base + 1, {name: base + 10 + i for i, name in enumerate(sorted(ports(model)))}
+    return base, base + 1, {name: base + 10 + i for i, name in enumerate(sorted(ports(model, serial)))}
 
 def set_text(parent, tag, value):
     node = parent.find(tag)
@@ -74,6 +74,15 @@ def ios_config(d, spec):
             lines += [" switchport trunk allowed vlan " + ",".join(map(str, mode["allowed_vlans"])), f" switchport trunk native vlan {mode['native_vlan']}"]
         lines += [" no shutdown", " exit"]
     config = d["config"]
+    if "bgp" in config:
+        b = config["bgp"]
+        lines += [f"router bgp {b['asn']}", " no auto-summary"]
+        for network in sorted(set(b["networks"])):
+            n = ip.IPv4Network(network)
+            lines += [f" network {n.network_address} mask {n.netmask}"]
+        for neighbor in sorted(b["neighbors"], key=lambda n: ip.IPv4Address(n["ip"])):
+            lines += [f" neighbor {neighbor['ip']} remote-as {neighbor['remote_as']}"]
+        lines += [" exit"]
     for route in config.get("static_routes", []):
         n = ip.IPv4Network(route["network"])
         lines += [f"ip route {n.network_address} {n.netmask} {route['next_hop']}"]
@@ -121,9 +130,21 @@ def clean_model(data):
 
 def build(spec, template_dir=None):
     s = normalize(spec)
-    template_dir = prepare() if template_dir is None else template_dir
+    serial = any("module" in d for d in s["devices"])
+    template_dir = prepare(serial=serial) if template_dir is None else template_dir
     models = {d["model"]: clean_model((template_dir / (d["model"] + ".xml")).read_bytes()) for d in s["devices"]}
-    lab = Lab(str(template_dir / "network_seed.xml"), models)
+    modules = {}
+    if serial:
+        module = ET.fromstring((template_dir / "HWIC-2T.xml").read_bytes())
+        for port in module.iter("PORT"):
+            for tag in ("IP", "SUBNET", "PORT_GATEWAY", "PORT_DNS", "DESCRIPTION", "IPV6_LINK_LOCAL", "IPV6_DEFAULT_LINK_LOCAL", "IPV6_ADDRESSES"):
+                node = port.find(tag)
+                if node is not None:
+                    node.clear()
+            for tag, value in (("CLOCKRATE", "0"), ("CLOCKRATEFLAG", "false"), ("POWER", "false"), ("PORT_DHCP_ENABLE", "false")):
+                set_text(port, tag, value)
+        modules["HWIC-2T"] = ET.tostring(module)
+    lab = Lab(str(template_dir / "network_seed.xml"), models, modules)
     if not compatible_seed(lab.base):
         raise ValueError("Seed memakai referensi legacy/tidak lengkap. Regenerasi cache melalui bootstrap; jangan mengubah tag VERSION.")
     lab.prune_seed_devices()
@@ -137,10 +158,12 @@ def build(spec, template_dir=None):
             a = address(d["ip"])
             nic = (str(a.ip), str(a.netmask), d.get("gateway", ""))
         ids[d["id"]] = lab.add_device(d["model"], d["id"], *d["position"], ios_config=cli, pc_ip=nic)
+        if "module" in d:
+            lab.install_module(ids[d["id"]], d["module"], slot=0)
         el = lab._els[ids[d["id"]]]
         eng = el.find("ENGINE")
         logical = el.find("WORKSPACE/LOGICAL")
-        mem, dev, port_addresses = device_addresses(index, d["model"])
+        mem, dev, port_addresses = device_addresses(index, d["model"], "module" in d)
         set_text(logical, "MEM_ADDR", str(mem))
         set_text(logical, "DEV_ADDR", str(dev))
         addresses[d["id"]] = (dev, port_addresses)
@@ -159,7 +182,11 @@ def build(spec, template_dir=None):
     for link in s["links"]:
         ad, ap = link["from"].split(":")
         bd, bp = link["to"].split(":")
-        lab.link(ids[ad], ap, ids[bd], bp)
+        if link["cable"] == "serial":
+            dce, dport = (ad, ap) if link["dce"] == "from" else (bd, bp)
+            lab.link(ids[ad], ap, ids[bd], bp, kind="serial", dce=ids[dce], dce_port=dport, clock=link["clock_rate"])
+        else:
+            lab.link(ids[ad], ap, ids[bd], bp)
         cable = lab.net.find("LINKS")[-1].find("CABLE")
         for side, name, port in (("FROM", ad, ap), ("TO", bd, bp)):
             dev, port_addresses = addresses[name]
@@ -167,6 +194,15 @@ def build(spec, template_dir=None):
             set_text(cable, side + "_PORT_MEM_ADDR", str(port_addresses[port]))
         if link["cable"] == "cross":
             cable.find("TYPE").text = "eCrossOver"
+    # link(serial) appends DCE clock configuration; persist the final CLI everywhere.
+    for name in configs:
+        eng = lab._els[ids[name]].find("ENGINE")
+        lines = [line.text or "" for line in eng.findall("RUNNINGCONFIG/LINE")]
+        configs[name] = "\n".join(lines) + "\n"
+        startup = eng.find("STARTUPCONFIG")
+        startup.clear()
+        for line in lines:
+            ET.SubElement(startup, "LINE").text = line
     xml = ET.tostring(lab.base, encoding="utf-8", xml_declaration=True)
     validate_xml(xml)
     return s, xml, configs
@@ -182,13 +218,23 @@ def summary(s):
             lines += [f"| {d['id']} | FastEthernet0 | {d['ip']} | {d.get('gateway', '—')} |"]
     lines += ["", "| Dari | Ke | Kabel |", "|---|---|---|"]
     lines += [f"| {l['from']} | {l['to']} | {l['cable']} |" for l in s["links"]]
+    bgp = [d for d in s["devices"] if "bgp" in d["config"]]
+    if bgp:
+        lines += ["", "## BGP", "", "| Router | AS | Network | Neighbor (remote AS) |", "|---|---|---|---|"]
+        for d in bgp:
+            b = d["config"]["bgp"]
+            peers = ", ".join(f"{n['ip']} ({n['remote_as']})" for n in b["neighbors"])
+            lines += [f"| {d['id']} | {b['asn']} | {', '.join(b['networks'])} | {peers} |"]
+    for link in s["links"]:
+        if link["cable"] == "serial":
+            lines += ["", f"Serial DCE: {link[link['dce']]} — clock rate {link['clock_rate']}."]
     lines += ["", "Validasi struktur dan round-trip codec lulus. Pembukaan di Packet Tracer dan penerapan CLI perlu diverifikasi di aplikasi; laporan ini bukan hasil ping.", ""]
     return "\n".join(lines)
 
 def main():
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("spec", nargs="?")
-    p.add_argument("--preset", choices=["lan", "vlan", "ospf"], help="Contoh bawaan tanpa menulis ulang YAML")
+    p.add_argument("--preset", choices=["lan", "vlan", "ospf", "bgp"], help="Contoh bawaan tanpa menulis ulang YAML")
     p.add_argument("--json-report", action="store_true", help="Laporan JSON singkat")
     p.add_argument("--out", required=True, help="Direktori hasil baru")
     p.add_argument("--workspace", default=".")
@@ -202,7 +248,7 @@ def main():
         if out.exists():
             raise ValueError("Direktori output sudah ada; pilih direktori baru")
         spec = normalize(load_spec(src))
-        templates = prepare(a.workspace, a.pt_install)
+        templates = prepare(a.workspace, a.pt_install, serial=any("module" in d for d in spec["devices"]))
         s, xml, configs = build(spec, templates)
         pkt = encode_bytes(xml, "pkt")
         if decode_bytes(pkt, "pkt").xml != xml:

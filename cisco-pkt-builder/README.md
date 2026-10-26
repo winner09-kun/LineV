@@ -1,12 +1,12 @@
 # Cisco Packet Tracer builder
 
-Paket skill dari PRD versi 0.1 untuk mengubah deskripsi jaringan melalui agent menjadi YAML, XML, dan `.pkt`. Paket ini menghasilkan lab LAN, VLAN/trunk, routing statis, OSPF, dan DHCP router. **Status: kandidat MVP; penerimaan aplikasi belum terverifikasi.**
+Paket skill dari PRD versi 0.1 untuk mengubah deskripsi jaringan melalui agent menjadi YAML, XML, dan `.pkt`. Paket ini menghasilkan lab LAN, VLAN/trunk, routing statis, OSPF, eBGP dasar melalui serial, dan DHCP router. **Status: kandidat MVP; penerimaan aplikasi belum terverifikasi.**
 
 ## Menjalankan
 
-Perintah chat singkat sekarang tersedia: `/pkt help`, `/pkt lan`, `/pkt vlan`, `/pkt ospf`, `/pkt buat <deskripsi>`, `/pkt edit <spec> <perubahan>`, `/pkt build`, `/pkt validate`, `/pkt decode`, dan `/pkt encode`. Lihat [daftar perintah](COMMANDS.md). Ini protokol agent setelah skill dimuat, bukan menu slash native yang terpasang otomatis.
+Perintah chat singkat sekarang tersedia: `/pkt help`, `/pkt lan`, `/pkt vlan`, `/pkt ospf`, `/pkt bgp`, `/pkt buat <deskripsi>`, `/pkt edit <spec> <perubahan>`, `/pkt build`, `/pkt validate`, `/pkt decode`, dan `/pkt encode`. Lihat [daftar perintah](COMMANDS.md). Ini protokol agent setelah skill dimuat, bukan menu slash native yang terpasang otomatis.
 
-Untuk alur hemat token, gunakan `--preset lan|vlan|ospf --json-report` tanpa argumen spec. AI tidak perlu menulis ulang contoh atau membaca XML. Untuk kustomisasi, gunakan spec seperti biasa. Detail: [metode hemat token](TOKEN_EFFICIENCY.md).
+Untuk alur hemat token, gunakan `--preset lan|vlan|ospf|bgp --json-report` tanpa argumen spec. AI tidak perlu menulis ulang contoh atau membaca XML. Untuk kustomisasi, gunakan spec seperti biasa. Detail: [metode hemat token](TOKEN_EFFICIENCY.md).
 
 Python 3.10 atau lebih baru dan instalasi Cisco Packet Tracer dengan folder contoh `saves/`. Pengguna cukup menjelaskan topologi ke agent; build pertama mencari instalasi PT dan menyiapkan struktur perangkat otomatis. Tidak perlu mencari atau memasukkan template secara manual. Codec dan parser YAML disertakan sehingga proses tidak memerlukan jaringan, compiler, atau pip. Parser memakai SafeLoader.
 
@@ -123,7 +123,7 @@ Top-level: `name`, `devices`, `links`. Nama memakai huruf awal, lalu huruf/angka
 
 Perangkat memerlukan `id`, `type`; `model` dan `position: [x, y]` opsional. Model MVP: router `2911`, switch `2960` atau `2960-24TT`, pc `PC-PT`, server `Server-PT`. Koordinat 0–3800. Default posisi grid dengan jarak 220 × 200. Maksimum 100 perangkat.
 
-- Router: `interfaces: {Gi0/0: 192.168.10.1/24}`. Port Gi0/0 sampai Gi0/2.
+- Router: `interfaces: {Gi0/0: 192.168.10.1/24}`. Port Gi0/0 sampai Gi0/2. Tambahkan `module: HWIC-2T` untuk Se0/0/0 dan Se0/0/1 pada slot 0 router 2911. Bootstrap mengambil modul dari sampel lokal jika diperlukan; jika tidak ditemukan, build berhenti dengan pesan yang jelas.
 - PC/server: `ip: 192.168.10.10/24`, `gateway: 192.168.10.1`. Jika IP tidak ditentukan, NIC tidak diberi alamat; agent sebaiknya mengisi alamat sesuai kebutuhan pengguna.
 - Switch: `vlans: {10: DATA}` dan `ports: {Fa0/1: {mode: access, vlan: 10}}`. Port Fa0/1–Fa0/24 serta Gi0/1–Gi0/2. Trunk memakai `{mode: trunk, allowed_vlans: [10, 20], native_vlan: 1}`. VLAN selain 1 harus didefinisikan. Trunk hanya membawa VLAN yang disebut.
 - Link ringkas: `[R1:Gi0/0, SW1:Gi0/1]`; bentuk lengkap: `{from: R1:Gi0/0, to: SW1:Gi0/1, cable: straight}`. Kabel otomatis cross untuk switch–switch atau pasangan endpoint non-switch, straight untuk switch–endpoint. Nama port panjang juga diterima.
@@ -150,11 +150,32 @@ OSPF mengonversi CIDR menjadi wildcard mask. Next hop statis harus berada di sub
 
 ## Contoh
 
+### eBGP dan serial
+
+Jalankan `/pkt bgp` atau `python cisco-pkt-builder/scripts/pkt.py bgp`. Preset mengikuti diagram tiga AS: 100/200/300, LAN 192.168.10.0/24, 192.168.20.0/24, 192.168.30.0/24, transit 10.10.10.0/30 dan 20.20.20.0/30. Ada 3 router, 3 switch, 7 PC dan 12 link. Router 2911 + HWIC-2T menggantikan Router-PT pada gambar; nama port berbeda. IP PC mulai .10 dan gateway .1 merupakan asumsi desain; posisi mengikuti pengelompokan gambar, tanpa ellipse berwarna.
+
+```yaml
+# Pada device router dengan module: HWIC-2T dan interfaces yang sesuai:
+config:
+  bgp:
+    asn: 100
+    networks: [192.168.10.0/24]
+    neighbors: [{ip: 10.10.10.2, remote_as: 200}]
+# Di links:
+# - {from: 'R1:Se0/0/0', to: 'R2:Se0/0/0', cable: serial, dce: from, clock_rate: 64000}
+```
+
+eBGP terbatas pada IPv4, ASN 1–65535, neighbor yang terhubung langsung melalui link dalam spec, pasangan ASN/neighbor timbal balik, dan network yang persis sama dengan subnet interface lokal. iBGP, multihop, redistribution dan policy/route-map belum tersedia. DCE dipilih dengan `from` atau `to` (default `from`); clock rate 64000 (default), 128000 atau 2000000. Port serial wajib di kedua ujung; clock juga disimpan di running/startup config dan CLI fallback. Contoh lengkap: [bgp.yaml](examples/bgp.yaml).
+
+Sintaks CLI mengikuti [Cisco BGP Configuration Guide](https://www.cisco.com/c/en/us/td/docs/ios-xml/ios/iproute_bgp/configuration/15-mt/irg-15-mt-book/irg-basic-net.html). Referensi IOS tidak membuktikan penerapan di Packet Tracer. Setelah membuka file, periksa `show ip interface brief`, `show ip bgp summary`, `show ip route`, lalu ping antar-PC. Status Established, route BGP dan ping tetap **belum diuji** sampai ada bukti aplikasi.
+
+### Preset lain
+
 - `examples/lan.yaml`: 1 router, 1 switch, 2 PC, satu subnet.
 - `examples/vlan.yaml`: 2 switch, VLAN 10/20, trunk, 3 PC dan 1 server. VLAN berbeda terisolasi; tidak ada routing antar-VLAN. Server dipakai sebagai endpoint IP, layanan aplikasi dinonaktifkan.
 - `examples/ospf.yaml`: 2 router, 2 switch, 4 PC, dua LAN dan transit /30.
 
-Repository menyediakan ketiga spesifikasi YAML. File `.pkt` dibuat lokal saat build; XML, cache dan contoh biner tidak didistribusikan dalam paket publik.
+Repository menyediakan empat spesifikasi YAML. File `.pkt` dibuat lokal saat build; XML, cache dan contoh biner tidak didistribusikan dalam paket publik.
 
 ## Kompatibilitas dan batas penerimaan
 
@@ -164,11 +185,11 @@ Kedua profil mengikuti aturan berbasis bukti di [SKILL.md](SKILL.md): memakai ke
 
 Jika hasil versi lama lambat pada **Opening file**, perbarui paket skill lalu build ulang dari spec atau preset ke folder hasil baru. Cache lama otomatis diperbarui untuk memakai referensi seed yang konsisten. Perbaikan mencakup ID memori perangkat/kabel dan pembersihan timeline donor; file `.pkt` lama tidak berubah otomatis. Validasi struktur/codec tidak membuktikan kecepatan buka GUI. Lihat [bukti pengujian](ACCEPTANCE.md).
 
-Bootstrap diuji memakai contoh bawaan instalasi **9.0.0**. Sampel dapat berasal dari versi PT lebih lama; versi sumber dicatat dalam manifest cache. Seed yang terpilih pada mesin pengujian bertag **7.1.0.0000**; angka ini bukan klaim kompatibilitas runtime. Dua percobaan peluncuran aplikasi tidak memberi jendela yang dapat ditarget alat otomasi. Tidak ada klaim file telah dibuka atau CLI diterapkan di PT. Jangan mengganti tag VERSION untuk memaksakan kompatibilitas. Runtime PT 7.x/8.x belum diuji.
+Bootstrap diuji memakai contoh bawaan instalasi **9.0.0**. Sampel dapat berasal dari versi PT lebih lama; versi sumber dicatat dalam manifest cache. Seed yang terpilih pada mesin pengujian bertag **7.2.0.0000**; angka ini bukan klaim kompatibilitas runtime. Dua percobaan peluncuran aplikasi tidak memberi jendela yang dapat ditarget alat otomasi. Tidak ada klaim file telah dibuka atau CLI diterapkan di PT. Jangan mengganti tag VERSION untuk memaksakan kompatibilitas. Runtime PT 7.x/8.x belum diuji.
 
 Validasi mencakup XML well-formed, model/port, nama/ID, IP ganda, gateway, VLAN, link yatim, port ganda, field asing, integritas codec dan round-trip. Validasi ini tidak membuktikan konektivitas, route convergence, atau penerapan konfigurasi oleh PT. Lihat `ACCEPTANCE.md` untuk hasil terukur dan pekerjaan yang tersisa.
 
-NAT, impor/modifikasi otomatis sembarang `.pkt`, IPv6, subinterface/SVI, serial, wireless/IoT/ASA, layanan server dan `.pka` belum tersedia. Untuk mengedit lab hasil skill, ubah YAML atau `topology.json`, lalu bangun ulang. Decode file lain dapat digunakan untuk inspeksi; encoder hanya menerima model MVP. Tidak ada fallback JavaScript yang diklaim bekerja tanpa uji API PT.
+NAT, impor/modifikasi otomatis sembarang `.pkt`, IPv6, subinterface/SVI, wireless/IoT/ASA, layanan server dan `.pka` belum tersedia. Untuk mengedit lab hasil skill, ubah YAML atau `topology.json`, lalu bangun ulang. Decode file lain dapat digunakan untuk inspeksi; encoder hanya menerima model MVP. Tidak ada fallback JavaScript yang diklaim bekerja tanpa uji API PT.
 
 ## Asal kode dan lisensi
 

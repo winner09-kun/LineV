@@ -11,6 +11,7 @@ Setelah skill dimuat, ketik salah satu perintah berikut di chat agent:
 | `/pkt lan` | 1 router, 1 switch, 2 PC satu subnet |
 | `/pkt vlan` | 2 switch, VLAN 10/20, trunk, 3 PC dan 1 server |
 | `/pkt ospf` | 2 router, 2 switch, 4 PC dengan OSPF |
+| `/pkt bgp` | 3 router HWIC-2T, 3 switch, 7 PC, AS 100/200/300 |
 | `/pkt buat <deskripsi>` | AI menyusun spec sesuai deskripsi lalu membangun .pkt |
 | `/pkt edit <spec> <perubahan>` | AI merevisi spec dan membangun hasil baru |
 | `/pkt build <spec.yaml>` | Membangun spec YAML/JSON yang sudah ada |

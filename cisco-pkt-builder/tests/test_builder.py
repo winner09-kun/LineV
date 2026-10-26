@@ -22,7 +22,7 @@ class BuilderTests(unittest.TestCase):
         (ROOT.parent / "qa").mkdir(exist_ok=True)
 
     def test_three_examples_roundtrip(self):
-        for name, count in (("lan", 4), ("vlan", 6), ("ospf", 8)):
+        for name, count in (("lan", 4), ("vlan", 6), ("ospf", 8), ("bgp", 13)):
             with self.subTest(name=name):
                 s, xml, _ = build(load_spec(ROOT / f"examples/{name}.yaml"))
                 root = validate_xml(xml)
@@ -34,6 +34,66 @@ class BuilderTests(unittest.TestCase):
         a, b = build(self.spec)[1], build(self.spec)[1]
         self.assertEqual(a, b)
         self.assertEqual(encode_bytes(a, "pkt"), encode_bytes(b, "pkt"))
+
+    def test_bgp_serial_config_and_hardware(self):
+        spec = load_spec(ROOT / "examples/bgp.yaml")
+        s, xml, configs = build(spec)
+        self.assertEqual(xml, build(s)[1])
+        root = validate_xml(xml)
+        devices = {d.findtext("ENGINE/SAVE_REF_ID"): d for d in root.findall("NETWORK/DEVICES/DEVICE")}
+        self.assertIn("router bgp 200", configs["R2"])
+        self.assertIn(" neighbor 10.10.10.1 remote-as 100", configs["R2"])
+        self.assertIn(" network 192.168.30.0 mask 255.255.255.0", configs["R3"])
+        serial_links = [l for l in root.findall("NETWORK/LINKS/LINK") if l.findtext("TYPE") == "eSerial"]
+        self.assertEqual(len(serial_links), 2)
+        for link in serial_links:
+            c = link.find("CABLE")
+            for side, port in zip(("FROM", "TO"), c.findall("PORT")):
+                d = devices[c.findtext(side)]
+                bays = [sl for sl in d.iter("SLOT") if sl.findtext("TYPE") == "eInterfaceCard"]
+                self.assertEqual(bays[0].findtext("MODULE/MODEL"), "HWIC-2T")
+                p = bays[0].findall("MODULE/PORT")[int(port.text[-1])]
+                self.assertEqual(p.findtext("POWER"), "true")
+                self.assertEqual(p.findtext("CLOCKRATE"), "64000" if c.findtext(side) == c.findtext("DCEDEV") else "0")
+        for d in devices.values():
+            name = d.findtext("ENGINE/NAME")
+            if name in configs:
+                running = [n.text for n in d.findall("ENGINE/RUNNINGCONFIG/LINE")]
+                self.assertEqual(running, [n.text for n in d.findall("ENGINE/STARTUPCONFIG/LINE")])
+                self.assertEqual("\n".join(running) + "\n", configs[name])
+        self.assertIn(" clock rate 64000", configs["R1"])
+        self.assertNotIn(" clock rate", configs["R3"])
+
+    def test_bgp_invalid_peer_and_network(self):
+        for field, value, message in (("asn", 0, "ASN"), ("networks", ["172.16.0.0/24"], "subnet interface"), ("neighbors", [{"ip": "10.10.10.9", "remote_as": 200}], "terhubung langsung"), ("neighbors", [{"ip": "10.10.10.2", "remote_as": 300}], "timbal balik")):
+            with self.subTest(field=field, value=value):
+                spec = load_spec(ROOT / "examples/bgp.yaml")
+                spec["devices"][0]["config"]["bgp"][field] = value
+                with self.assertRaisesRegex(ValueError, message):
+                    normalize(spec)
+
+    def test_serial_requires_module(self):
+        spec = load_spec(ROOT / "examples/bgp.yaml")
+        del spec["devices"][0]["module"]
+        with self.assertRaisesRegex(ValueError, "port interface"):
+            normalize(spec)
+
+    def test_serial_clock_and_cable_rejected(self):
+        for field, value in (("clock_rate", 123), ("dce", "R9"), ("cable", "straight")):
+            spec = load_spec(ROOT / "examples/bgp.yaml")
+            spec["links"][0][field] = value
+            with self.assertRaises(ValueError):
+                normalize(spec)
+
+    def test_serial_dce_to_and_xml_rejection(self):
+        spec = load_spec(ROOT / "examples/bgp.yaml")
+        spec["links"][0]["dce"] = "to"
+        root = ET.fromstring(build(spec)[1])
+        cable = root.find("NETWORK/LINKS/LINK/CABLE")
+        self.assertEqual(cable.findtext("DCEDEV"), cable.findtext("TO"))
+        cable.find("DCEPORT").text = "Serial9/9/9"
+        with self.assertRaisesRegex(ValueError, "DCE"):
+            validate_xml(ET.tostring(root))
 
     def test_duplicate_device_memory_rejected(self):
         root = ET.fromstring(build(self.spec)[1])

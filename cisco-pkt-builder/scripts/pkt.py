@@ -10,6 +10,7 @@ HELP = """Perintah chat setelah skill dimuat:
 /pkt lan                          1 router, 1 switch, 2 PC
 /pkt vlan                         2 switch, VLAN 10/20 dan trunk
 /pkt ospf                         2 router, 2 switch, 4 PC
+/pkt bgp                          3 router serial, AS 100/200/300, 7 PC
 /pkt buat <deskripsi>              Agent membuat spec lalu build
 /pkt edit <spec> <perubahan>       Agent menyalin/mengedit spec lalu build baru
 /pkt build <spec>                  Build YAML/JSON yang sudah ada
@@ -38,7 +39,7 @@ def parser():
     p = argparse.ArgumentParser(description=__doc__)
     commands = p.add_subparsers(dest="command", required=True)
     commands.add_parser("help", help="Daftar perintah chat")
-    for name in ("lan", "vlan", "ospf", "build"):
+    for name in ("lan", "vlan", "ospf", "bgp", "build"):
         cmd = commands.add_parser(name)
         if name == "build":
             cmd.add_argument("spec")
@@ -58,7 +59,7 @@ def parser():
 
 def command_args(a):
     scripts = PACKAGE / "scripts"
-    if a.command in ("lan", "vlan", "ospf", "build"):
+    if a.command in ("lan", "vlan", "ospf", "bgp", "build"):
         out = a.out if a.out is not None else next_output(a.workspace, a.command)
         local_path(out, a.workspace)
         args = [sys.executable, str(scripts / "build_topology.py")]

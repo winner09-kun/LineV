@@ -1,6 +1,6 @@
 ---
 name: cisco-pkt-builder
-description: Buat lab Cisco Packet Tracer .pkt dari deskripsi, YAML atau perintah /pkt seperti /pkt lan, /pkt ospf dan /pkt buat. Mendukung router, switch, PC, server, VLAN, routing statis dan DHCP router; bukan perangkat produksi atau activity .pka.
+description: Buat lab Cisco Packet Tracer .pkt dari deskripsi, YAML atau perintah /pkt seperti /pkt lan, /pkt bgp dan /pkt buat. Mendukung router, switch, PC, server, VLAN, OSPF, eBGP dasar, serial HWIC-2T, routing statis dan DHCP router; bukan perangkat produksi atau activity .pka.
 ---
 
 # Cisco Packet Tracer builder
@@ -19,7 +19,7 @@ Ini protokol skill, bukan pendaftaran dropdown slash native. Jika aplikasi mence
 
 ## Alur hemat token
 
-1. Pilih preset bila persis sesuai kebutuhan: `lan` (1 router, 1 switch, 2 PC), `vlan` (2 switch, 3 PC, 1 server, VLAN 10/20), atau `ospf` (2 router, 2 switch, 4 PC). Langsung build; jangan baca/tulis ulang YAML.
+1. Pilih preset bila persis sesuai kebutuhan: `lan` (1 router, 1 switch, 2 PC), `vlan` (2 switch, 3 PC, 1 server, VLAN 10/20), `ospf` (2 router, 2 switch, 4 PC), atau `bgp` (3 router serial, 3 switch, 7 PC, AS 100/200/300). Langsung build; jangan baca/tulis ulang YAML.
 2. Untuk variasi, baca hanya satu `examples/<preset>.yaml`, salin ke workspace dan edit bagian terkait. Untuk revisi, pakai spec terakhir atau `topology.json`, bukan decode .pkt. Model, posisi dan kabel dapat memakai default. Jelaskan asumsi penting; tanyakan hanya ambiguitas material.
 3. Jalankan satu build, validasi sudah terintegrasi:
 
@@ -49,6 +49,6 @@ Ini protokol skill, bukan pendaftaran dropdown slash native. Jika aplikasi mence
 
 ## Batas
 
-Bootstrap dari instalasi 9.0.0 diuji; GUI belum terverifikasi. Versi seed dicatat pada manifest cache, bukan klaim kompatibilitas runtime. Jangan mengganti tag versi. Model MVP: 2911, 2960-24TT, PC-PT, Server-PT. NAT, IPv6, subinterface/SVI, serial, wireless/IoT/ASA, layanan server, .pka dan edit generik .pkt belum didukung. VLAN berbeda tidak otomatis saling terhubung.
+Bootstrap dari instalasi 9.0.0 diuji; GUI belum terverifikasi. Versi seed dicatat pada manifest cache, bukan klaim kompatibilitas runtime. Jangan mengganti tag versi. Model MVP: 2911, 2960-24TT, PC-PT, Server-PT. Serial terbatas pada HWIC-2T slot 0 router 2911 (Se0/0/0 dan Se0/0/1); modul diambil lokal hanya jika diperlukan. eBGP IPv4 dasar memakai ASN 1–65535, neighbor router dalam spec yang terhubung langsung dan timbal balik, serta network interface lokal. iBGP, multihop, policy BGP, NAT, IPv6, subinterface/SVI, wireless/IoT/ASA, layanan server, .pka dan edit generik .pkt belum didukung. VLAN berbeda tidak otomatis saling terhubung. Saat meniru gambar, nyatakan penggantian model/port dan asumsi IP; bentuk dekoratif/ellipse belum didukung.
 
 Script offline; input/output lab dan cache di --workspace, output lab harus baru. Bootstrap membaca sampel bawaan instalasi PT secara lokal. Cache/template/output biner tidak ikut publikasi repository atau ZIP. Jangan menebak skema atau API JavaScript PT. Jika build/load gagal, beri diagnosis dan spec/CLI yang tersedia, bukan klaim penerimaan selesai. CLI fallback ada di configs/.
