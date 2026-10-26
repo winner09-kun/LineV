@@ -28,16 +28,94 @@ Output build: `.pkt`, XML, spesifikasi normalisasi `topology.json`, ringkasan pe
 
 ## Instalasi agent
 
-Salin **seluruh folder** `cisco-pkt-builder` ke lokasi berikut, lalu mulai chat baru atau muat ulang daftar skill:
+### Persiapan bersama
 
-| Agent | Per proyek | Global |
-|---|---|---|
-| Codex | `<workspace>/.agents/skills/cisco-pkt-builder/` | `~/.agents/skills/cisco-pkt-builder/` |
-| Antigravity | `<workspace>/.agents/skills/cisco-pkt-builder/` | `~/.gemini/config/skills/cisco-pkt-builder/` |
+1. Siapkan Python 3.10+ dan Cisco Packet Tracer dengan contoh bawaan pada mesin yang akan menjalankan agent. Cek `python --version`; jika perintah itu tidak tersedia, gunakan interpreter yang sesuai seperti `py -3` pada Windows atau `python3` pada Linux/macOS dalam seluruh perintah berikut.
+2. Unduh `cisco-pkt-builder.zip` dari repository LineV menggunakan **Download raw file**, lalu ekstrak. Gunakan ZIP rilis atau checkout Git bersih; jangan menyalin cache/template lokal dari instalasi lama.
+3. Buka folder proyek tempat Anda ingin menyimpan lab sebagai workspace agent. Buat direktori `.agents/skills` di dalam proyek tersebut.
+4. Salin seluruh folder `cisco-pkt-builder` hasil ekstraksi ke `.agents/skills/`. Jangan menyalin hanya SKILL.md dan jangan membuat folder bersarang dua kali.
 
-Lokasi mengikuti [dokumentasi resmi Codex](https://learn.chatgpt.com/docs/build-skills) dan [dokumentasi resmi Antigravity](https://antigravity.google/docs/skills), diperiksa 25 Oktober 2026. Instalasi baru pada kedua agent belum diuji oleh pengguna independen. Paket diserahkan di workspace, belum dipasang global. Agent yang tidak menemukan skill dapat diminta membaca `cisco-pkt-builder/AGENTS.md`.
+Struktur akhirnya:
 
-Contoh permintaan: “Gunakan cisco-pkt-builder untuk membuat 2 router, 2 switch, dan 4 PC dengan OSPF area 0.”
+```text
+proyek-jaringan/
+  .agents/skills/cisco-pkt-builder/
+    SKILL.md
+    COMMANDS.md
+    agents/openai.yaml
+    references/codex-gpt.md
+    references/antigravity-gemini.md
+    scripts/pkt.py
+    scripts/bootstrap.py
+    examples/
+    vendor/
+```
+
+### Codex dengan GPT
+
+1. Pasang di lokasi workspace di atas, lalu buka proyek tersebut di Codex. Gunakan model GPT yang tersedia di akun Anda; paket tidak mengganti model atau reasoning effort.
+2. Mulai chat baru. Pilih skill melalui pemilih skill host, ketik `$cisco-pkt-builder` pada permukaan yang mendukungnya, atau sebutkan nama skill. Jika belum muncul, pastikan path benar dan mulai ulang Codex.
+3. Kirim prompt:
+
+   ```text
+   Gunakan skill cisco-pkt-builder. /pkt mode codex-gpt
+   /pkt lan
+   ```
+
+4. Agent membaca profil Codex, menjalankan script, lalu memberikan `.pkt` dan ringkasan IP. Izinkan akses file/terminal yang memang dibutuhkan melalui mekanisme host, tanpa mematikan sandbox.
+
+Lokasi dan pemanggilan eksplisit mengikuti [OpenAI Build skills](https://learn.chatgpt.com/docs/build-skills), diperiksa 26 Oktober 2026. Metadata `agents/openai.yaml` menyediakan nama tampilan/prompt awal; tidak berisi API key atau pengaturan model.
+
+### Antigravity dengan Gemini
+
+1. Pasang di lokasi workspace yang sama, buka proyek di Antigravity, dan gunakan model Gemini yang tersedia di aplikasi/akun Anda.
+2. Mulai chat baru. Pada IDE, periksa skill aktif melalui **Customizations** bila perlu. Pada App/CLI yang mendukung slash skill, nama skill ini dipanggil sebagai `/cisco-pkt-builder`; `/pkt` tetap protokol paket setelah skill dimuat.
+3. Prompt yang dapat digunakan tanpa bergantung pada dropdown:
+
+   ```text
+   Gunakan skill cisco-pkt-builder. /pkt mode antigravity-gemini
+   /pkt lan
+   ```
+
+4. Jika mode host meminta review rencana/terminal, ikuti alur itu. Agent memakai script yang sama dan memberikan file nyata, bukan hanya deskripsi topologi atau walkthrough.
+
+Lokasi dan aktivasi mengikuti [Antigravity Agent skills](https://antigravity.google/docs/skills), diperiksa 26 Oktober 2026. Paket tidak mengubah konfigurasi Gemini, allowlist terminal, atau aturan workspace Anda.
+
+### Pilihan pemasangan global
+
+Untuk pemakaian di banyak proyek, salin folder hasil ekstraksi ke **salah satu** lokasi global berikut. Hindari memasang duplikat workspace/global dengan nama sama jika tidak diperlukan.
+
+| Host | Lokasi global folder skill |
+|---|---|
+| Codex | `~/.agents/skills/cisco-pkt-builder/` |
+| Antigravity App/IDE | `~/.gemini/config/skills/cisco-pkt-builder/` |
+| Antigravity CLI | `~/.gemini/antigravity-cli/skills/cisco-pkt-builder/` |
+
+`~` berarti folder pengguna; pada Windows biasanya `C:\Users\<nama>`. Antigravity versi lama dapat memakai lokasi legacy; utamakan lokasi workspace bersama jika ragu. Rujukan resmi ada pada masing-masing bagian di atas. Script tetap menerima `--workspace` proyek pengguna meski paket dipasang global.
+
+### Tes setelah instalasi
+
+Dari direktori `proyek-jaringan`, jalankan:
+
+```sh
+python .agents/skills/cisco-pkt-builder/scripts/pkt.py help
+python .agents/skills/cisco-pkt-builder/scripts/pkt.py validate .agents/skills/cisco-pkt-builder/examples/lan.yaml --workspace .
+python .agents/skills/cisco-pkt-builder/scripts/pkt.py lan --workspace .
+```
+
+Dua perintah pertama tidak membutuhkan Packet Tracer. Perintah terakhir menyiapkan cache otomatis dan menghasilkan JSON dengan path `.pkt`. Buka hasilnya di PT untuk memeriksa tampilan dan konfigurasi. Jika lokasi aplikasi tidak terdeteksi, tambahkan `--pt-install "C:/Program Files/Cisco Packet Tracer 9.0.0"` sesuai lokasi sebenarnya.
+
+Skill tidak ditemukan: periksa path SKILL.md, mulai chat baru, lalu minta agent membaca file itu secara eksplisit. `/pkt` dicegat aplikasi: gunakan awalan `Gunakan skill cisco-pkt-builder:`. Python tidak ditemukan: pilih interpreter yang terpasang. Error izin: gunakan persetujuan host yang berlaku. Jangan meminta pengguna membuat template manual.
+
+### Penyesuaian profil
+
+| Profil | Panduan yang dimuat |
+|---|---|
+| `codex-gpt` | Aktivasi skill Codex, edit spec melalui tool file/patch, penanganan proses terminal dan batas sandbox |
+| `antigravity-gemini` | Aktivasi Antigravity, penggunaan script tanpa membaca source besar, penyesuaian dengan review rencana/terminal dan artifact hasil |
+| `auto` | Memilih dari host yang diketahui; jika tidak diketahui, memakai alur umum |
+
+Pilih dengan `/pkt mode <profil>` di chat. Ini panduan untuk agent, bukan flag model/API pada Python. Hanya satu profil dibaca agar konteks tetap kecil. Generator/validator sama untuk semua profil, sehingga pilihan model tidak mengubah aturan validasi. Perbedaan perilaku antarversi model belum diuji secara empiris; tidak ada klaim satu keluarga model selalu lebih baik. Uji instalasi lengkap oleh pengguna pada kedua aplikasi masih diperlukan.
 
 ## Skema input
 

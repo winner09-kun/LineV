@@ -5,7 +5,7 @@ import zipfile
 from common import PACKAGE, local_path
 
 def release_files():
-    allowed_dirs = {"scripts", "vendor", "tests"}
+    allowed_dirs = {"scripts", "vendor", "tests", "references", "agents"}
     allowed_root = {"LICENSE", "requirements.txt"}
     for path in sorted(PACKAGE.rglob("*")):
         if not path.is_file() or path.is_symlink():

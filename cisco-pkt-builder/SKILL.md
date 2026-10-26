@@ -5,6 +5,10 @@ description: Buat lab Cisco Packet Tracer .pkt dari deskripsi, YAML atau perinta
 
 # Cisco Packet Tracer builder
 
+## Profil agent
+
+Pilih satu profil dari host yang benar-benar menjalankan tugas: Codex dengan GPT → [codex-gpt](references/codex-gpt.md); Antigravity dengan Gemini → [antigravity-gemini](references/antigravity-gemini.md). Baca hanya profil terpilih. Jika host tidak diketahui, gunakan alur umum tanpa menebak model. Pilihan eksplisit pengguna `/pkt mode codex-gpt`, `/pkt mode antigravity-gemini`, atau `/pkt mode auto` mengatur panduan kerja untuk chat ini; sebutkan pilihan secara singkat lalu lanjutkan permintaan yang menyertainya. Mode tanpa tugas tidak menjalankan build. Ini tidak mengganti model, reasoning setting, provider, akses tool, atau kebijakan host. Profil yang dipilih lintas host hanya memberi gaya/alur kerja; jangan mengarang tool host lain.
+
 ## Perintah /pkt
 
 Kenali `/pkt` sebagai perintah chat setelah skill ini dimuat. Baca [COMMANDS.md](COMMANDS.md) saat pengguna memakai perintah atau meminta bantuan. `/pkt` tanpa argumen sama dengan `/pkt help`. Untuk help, cukup tampilkan daftar singkat; jangan jalankan bootstrap atau build.

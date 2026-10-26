@@ -8,6 +8,8 @@ Pengguna menjelaskan jaringan ke agent. Agent membuat spec kecil atau memilih pr
 
 ## Bukti pengujian
 
+Profil `codex-gpt` dan `antigravity-gemini` ditambahkan bersama metadata Codex dan panduan instalasi workspace/global. Profil adalah instruksi host, bukan perubahan model atau pengujian empiris antar-model. Seluruh 27 tes tetap lulus. ZIP diverifikasi memuat kedua profil dan metadata, tanpa template/biner Cisco; validator skill lulus. Ekstraksi ke workspace baru pada `.agents/skills/cisco-pkt-builder` lalu eksekusi `help` dan `validate` berhasil. Ini smoke test filesystem/CLI, belum uji end-to-end Antigravity/Gemini atau matriks versi GPT.
+
 Pembaruan 26 Oktober 2026: 27 tes lulus setelah penambahan dispatcher `/pkt`. Tujuh tes baru memeriksa help tanpa eksekusi, pemetaan preset/opsi, pemilihan direktori baru, argumen tanpa shell, penolakan perintah asing, validasi melalui dispatcher dan pembatasan path. Smoke test dispatcher `lan` berhasil menghasilkan 4 perangkat/3 link dengan validasi XML dan round-trip. Ini bukan bukti registrasi menu slash native atau uji GUI PT.
 
 Bootstrap berhasil pada instalasi Packet Tracer 9.0.0 Windows setelah memeriksa 75 sampel bawaan. Empat model ditemukan: 2911, 2960-24TT, PC-PT dan Server-PT. Seed sampel bertag 7.1.0.0000; versi file sampel bukan klaim versi aplikasi yang telah menerima output.

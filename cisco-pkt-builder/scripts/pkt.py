@@ -6,6 +6,7 @@ from common import PACKAGE, local_path
 
 HELP = """Perintah chat setelah skill dimuat:
 /pkt help                         Daftar perintah
+/pkt mode <profil>                Agent memilih auto/codex-gpt/antigravity-gemini
 /pkt lan                          1 router, 1 switch, 2 PC
 /pkt vlan                         2 switch, VLAN 10/20 dan trunk
 /pkt ospf                         2 router, 2 switch, 4 PC
@@ -21,7 +22,7 @@ Awalan /pkt opsional pada CLI. Gunakan tanda kutip untuk path dengan spasi.
 Build: --out, --workspace, --pt-install. Validate: --xml, --workspace.
 Encode/decode: --workspace. Tanpa --out, build memilih hasil/<nama>-N
 jika folder sebelumnya sudah ada. File lama tidak ditimpa.
-buat/edit adalah instruksi agent, bukan parser bahasa natural di Python.
+buat/edit/mode adalah instruksi agent, bukan parser bahasa natural di Python.
 Protokol ini tidak mendaftarkan menu slash/autocomplete bawaan aplikasi.
 """
 

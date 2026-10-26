@@ -5,6 +5,9 @@ Setelah skill dimuat, ketik salah satu perintah berikut di chat agent:
 | Perintah | Hasil |
 |---|---|
 | `/pkt` atau `/pkt help` | Daftar perintah, tanpa menjalankan generator |
+| `/pkt mode auto` | Agent memakai profil sesuai host yang dikenali |
+| `/pkt mode codex-gpt` | Panduan kerja Codex dengan GPT untuk chat ini |
+| `/pkt mode antigravity-gemini` | Panduan kerja Antigravity dengan Gemini untuk chat ini |
 | `/pkt lan` | 1 router, 1 switch, 2 PC satu subnet |
 | `/pkt vlan` | 2 switch, VLAN 10/20, trunk, 3 PC dan 1 server |
 | `/pkt ospf` | 2 router, 2 switch, 4 PC dengan OSPF |
@@ -37,7 +40,7 @@ python cisco-pkt-builder/scripts/pkt.py /pkt validate "spec kantor.yaml" --works
 python cisco-pkt-builder/scripts/pkt.py build spec.yaml --out hasil/custom --workspace .
 ```
 
-Awalan `/pkt` boleh ditulis sebagai argumen terpisah pada CLI. Jangan mengirim seluruh pesan chat sebagai satu string shell. `buat` dan `edit` ditangani AI, bukan parser bahasa natural dalam script. Dispatcher menolak perintah/opsi yang tidak dikenal dan meneruskan exit code validator/generator.
+Awalan `/pkt` boleh ditulis sebagai argumen terpisah pada CLI. Jangan mengirim seluruh pesan chat sebagai satu string shell. `buat`, `edit`, dan `mode` ditangani AI, bukan parser bahasa natural dalam script. Mode berlaku dalam chat dan tidak mengganti model/provider atau mendaftarkan tool. Tanpa tugas tambahan, mode hanya dikonfirmasi, tidak membangun file. Nama mode asing: tampilkan tiga pilihan yang tersedia. Dispatcher menolak perintah/opsi yang tidak dikenal dan meneruskan exit code validator/generator.
 
 Build menerima `--out`, `--workspace`, dan `--pt-install`. Tanpa `--out`, folder otomatis dipilih dari `hasil/lan`, `hasil/lan-2`, dan seterusnya (sesuai nama perintah). Folder eksplisit yang sudah ada ditolak oleh generator. Validasi menerima `--xml` untuk XML. Codec menerima `--workspace`. Semua pemeriksaan sebelumnya tetap berjalan.
 

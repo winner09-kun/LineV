@@ -1,0 +1,6 @@
+interface:
+  display_name: "Cisco Packet Tracer Builder"
+  short_description: "Buat lab Packet Tracer melalui chat dan /pkt"
+  default_prompt: "Gunakan $cisco-pkt-builder untuk membuat lab Packet Tracer dari deskripsi saya dengan profil codex-gpt."
+policy:
+  allow_implicit_invocation: true

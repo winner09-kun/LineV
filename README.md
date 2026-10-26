@@ -2,6 +2,26 @@
 
 Skill untuk membuat lab Cisco Packet Tracer dari deskripsi jaringan melalui YAML atau preset LAN, VLAN, dan OSPF.
 
+## Instalasi singkat
+
+1. Siapkan Python 3.10+ dan Cisco Packet Tracer dengan contoh bawaan pada komputer agent.
+2. Unduh [ZIP rilis](cisco-pkt-builder.zip) melalui **Download raw file**, lalu ekstrak.
+3. Salin folder `cisco-pkt-builder` ke `<proyek>/.agents/skills/cisco-pkt-builder/`.
+4. Buka proyek di Codex dengan GPT atau Antigravity dengan Gemini dan mulai chat baru.
+5. Kirim salah satu prompt berikut:
+
+```text
+Gunakan skill cisco-pkt-builder. /pkt mode codex-gpt
+/pkt lan
+```
+
+```text
+Gunakan skill cisco-pkt-builder. /pkt mode antigravity-gemini
+/pkt lan
+```
+
+Mode memilih panduan kerja, bukan mengganti model aplikasi. Petunjuk instalasi global, aktivasi khusus host, tes terminal, dan troubleshooting tersedia di [README skill](cisco-pkt-builder/README.md#instalasi-agent). Profil Gemini/GPT masih memerlukan uji penggunaan langsung di aplikasi masing-masing.
+
 - [Panduan penggunaan dan instalasi](cisco-pkt-builder/README.md)
 - [Paket skill ZIP](cisco-pkt-builder.zip)
 - [Metode hemat token AI](cisco-pkt-builder/TOKEN_EFFICIENCY.md)
