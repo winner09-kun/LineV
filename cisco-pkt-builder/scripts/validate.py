@@ -181,6 +181,7 @@ def validate_xml(data):
     require(root.tag == "PACKETTRACER5", "Bukan XML topologi .pkt")
     devs = root.findall("NETWORK/DEVICES/DEVICE")
     ids, names, used_ips = {}, set(), {}
+    device_refs, memory_ids = {}, set()
     for d in devs:
         sid, name = d.findtext("ENGINE/SAVE_REF_ID"), d.findtext("ENGINE/NAME")
         require(sid and sid not in ids and name and name not in names, "ID/nama perangkat XML ganda atau kosong")
@@ -188,6 +189,11 @@ def validate_xml(data):
         require(model in MODELS.values(), f"Model XML belum didukung: {model}")
         ids[sid] = ports(model)
         names.add(name)
+        for tag in ("MEM_ADDR", "DEV_ADDR"):
+            value = d.findtext("WORKSPACE/LOGICAL/" + tag)
+            require(value and value not in memory_ids, "Alamat memori perangkat XML ganda atau kosong")
+            memory_ids.add(value)
+        device_refs[sid] = d.findtext("WORKSPACE/LOGICAL/DEV_ADDR")
         actual = []
         if model in ("PC-PT", "Server-PT"):
             actual = [p.findtext("IP") for p in d.iter("PORT")]
@@ -208,8 +214,10 @@ def validate_xml(data):
         require(c is not None, "Cable XML tidak ada")
         ps = c.findall("PORT")
         require(len(ps) == 2, "Cable XML perlu dua port")
-        for sid, p in zip((c.findtext("FROM"), c.findtext("TO")), ps):
+        for side, p in zip(("FROM", "TO"), ps):
+            sid = c.findtext(side)
             require(sid in ids and p.text in ids[sid], "Link XML yatim atau port tidak valid")
+            require(c.findtext(side + "_DEVICE_MEM_ADDR") == device_refs[sid], "Referensi memori kabel XML tidak cocok")
             pair = (sid, p.text)
             require(pair not in occupied, "Port XML bentrok")
             occupied.add(pair)

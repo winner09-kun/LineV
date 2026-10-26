@@ -35,6 +35,36 @@ class BuilderTests(unittest.TestCase):
         self.assertEqual(a, b)
         self.assertEqual(encode_bytes(a, "pkt"), encode_bytes(b, "pkt"))
 
+    def test_duplicate_device_memory_rejected(self):
+        root = ET.fromstring(build(self.spec)[1])
+        devices = root.findall("NETWORK/DEVICES/DEVICE")
+        devices[-1].find("WORKSPACE/LOGICAL/MEM_ADDR").text = devices[-2].findtext("WORKSPACE/LOGICAL/MEM_ADDR")
+        with self.assertRaisesRegex(ValueError, "memori perangkat"):
+            validate_xml(ET.tostring(root))
+
+    def test_mismatched_cable_memory_rejected(self):
+        root = ET.fromstring(build(self.spec)[1])
+        root.find("NETWORK/LINKS/LINK/CABLE/FROM_DEVICE_MEM_ADDR").text = "1"
+        with self.assertRaisesRegex(ValueError, "memori kabel"):
+            validate_xml(ET.tostring(root))
+
+    def test_seed_reference_schema_not_version(self):
+        from bootstrap import compatible_seed
+        root = ET.fromstring('<PACKETTRACER5><VERSION>7.1.0.0000</VERSION><NETWORK><DEVICES><DEVICE><ENGINE><SAVE_REF_ID>save-ref-id:1</SAVE_REF_ID></ENGINE></DEVICE></DEVICES><LINKS><LINK><CABLE><FROM>save-ref-id:1</FROM><TO>save-ref-id:1</TO></CABLE></LINK></LINKS></NETWORK></PACKETTRACER5>')
+        self.assertTrue(compatible_seed(root))
+        root.find("NETWORK/LINKS/LINK/CABLE/FROM").text = "0"
+        self.assertFalse(compatible_seed(root))
+
+    def test_clean_seed_preserves_physical_identity(self):
+        from build_topology import clean_seed
+        root = ET.fromstring('<PACKETTRACER5><PHYSICALWORKSPACE><UUID>keep</UUID><ENVIRONMENT><TIME_IN_SECONDS>50</TIME_IN_SECONDS><ENVIRONMENT_OPTIONS><VALUE>changed</VALUE></ENVIRONMENT_OPTIONS><KEYFRAMES><FRAME><TIME>0</TIME><ENVIRONMENT_OPTIONS><VALUE>initial</VALUE></ENVIRONMENT_OPTIONS></FRAME><FRAME><TIME>50</TIME></FRAME></KEYFRAMES></ENVIRONMENT></PHYSICALWORKSPACE></PACKETTRACER5>')
+        clean_seed(root)
+        self.assertEqual(root.findtext("PHYSICALWORKSPACE/UUID"), "keep")
+        env = root.find("PHYSICALWORKSPACE/ENVIRONMENT")
+        self.assertEqual(env.findtext("TIME_IN_SECONDS"), "0")
+        self.assertEqual(len(env.find("KEYFRAMES")), 1)
+        self.assertEqual(env.findtext("ENVIRONMENT_OPTIONS/VALUE"), "initial")
+
     def test_duplicate_ip(self):
         self.spec["devices"][3]["ip"] = self.spec["devices"][2]["ip"]
         with self.assertRaisesRegex(ValueError, "IP ganda"):

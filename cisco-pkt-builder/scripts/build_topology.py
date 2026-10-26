@@ -5,10 +5,53 @@ import json
 import sys
 import xml.etree.ElementTree as ET
 from common import PACKAGE, load_spec, local_path, write_new
-from validate import normalize, validate_xml, address
+from validate import normalize, validate_xml, address, ports
 from pkt_core import encode_bytes, decode_bytes
 from lab_api import Lab
-from bootstrap import prepare
+from bootstrap import prepare, compatible_seed
+
+def clean_seed(root):
+    """Remove donor playback/extension state, retaining physical hierarchy/UUIDs."""
+    for tag in ("COMMAND_LOGS", "USER_PROFILE", "CODE_TESTING", "SCENARIOSET", "SCRIPT_MODULE"):
+        node = root.find(tag)
+        if node is not None:
+            node.clear()
+    options = root.find("OPTIONS")
+    if options is not None:
+        for tag in ("RECENT_FILES", "SCRIPT_MODULE_MANAGER"):
+            node = options.find(tag)
+            if node is not None:
+                node.clear()
+        ipc = options.find("IPC_MANAGER")
+        if ipc is not None:
+            for path in list(ipc.findall("METAFILE_PATH")):
+                ipc.remove(path)
+    physical = root.find("PHYSICALWORKSPACE")
+    if physical is not None:
+        notes = physical.find("NOTES")
+        if notes is not None:
+            notes.clear()
+        for environment in physical.iter("ENVIRONMENT"):
+            # Keep the donor's initial environmental definitions, not its timeline.
+            frames = environment.find("KEYFRAMES")
+            if frames is not None:
+                initial = next((f for f in frames if f.findtext("TIME") == "0"), None)
+                if initial is not None:
+                    for frame in list(frames):
+                        if frame is not initial:
+                            frames.remove(frame)
+                    current = environment.find("ENVIRONMENT_OPTIONS")
+                    initial_options = initial.find("ENVIRONMENT_OPTIONS")
+                    if current is not None and initial_options is not None:
+                        import copy
+                        current.clear()
+                        for option in initial_options:
+                            current.append(copy.deepcopy(option))
+                    set_text(environment, "TIME_IN_SECONDS", "0")
+
+def device_addresses(index, model):
+    base = 1_000_000 + index * 1000
+    return base, base + 1, {name: base + 10 + i for i, name in enumerate(sorted(ports(model)))}
 
 def set_text(parent, tag, value):
     node = parent.find(tag)
@@ -81,13 +124,12 @@ def build(spec, template_dir=None):
     template_dir = prepare() if template_dir is None else template_dir
     models = {d["model"]: clean_model((template_dir / (d["model"] + ".xml")).read_bytes()) for d in s["devices"]}
     lab = Lab(str(template_dir / "network_seed.xml"), models)
+    if not compatible_seed(lab.base):
+        raise ValueError("Seed memakai referensi legacy/tidak lengkap. Regenerasi cache melalui bootstrap; jangan mengubah tag VERSION.")
     lab.prune_seed_devices()
-    for tag in ("COMMAND_LOGS", "USER_PROFILE", "CODE_TESTING", "SCENARIOSET", "SCRIPT_MODULE"):
-        node = lab.base.find(tag)
-        if node is not None:
-            node.clear()
-    ids, configs = {}, {}
-    for d in s["devices"]:
+    clean_seed(lab.base)
+    ids, configs, addresses = {}, {}, {}
+    for index, d in enumerate(s["devices"]):
         host = d["type"] in ("pc", "server")
         cli = None if host else ios_config(d, s)
         nic = None
@@ -97,6 +139,11 @@ def build(spec, template_dir=None):
         ids[d["id"]] = lab.add_device(d["model"], d["id"], *d["position"], ios_config=cli, pc_ip=nic)
         el = lab._els[ids[d["id"]]]
         eng = el.find("ENGINE")
+        logical = el.find("WORKSPACE/LOGICAL")
+        mem, dev, port_addresses = device_addresses(index, d["model"])
+        set_text(logical, "MEM_ADDR", str(mem))
+        set_text(logical, "DEV_ADDR", str(dev))
+        addresses[d["id"]] = (dev, port_addresses)
         set_text(eng, "SYS_NAME", d["id"])
         if host:
             set_text(eng, "GATEWAY", d.get("gateway", ""))
@@ -113,8 +160,13 @@ def build(spec, template_dir=None):
         ad, ap = link["from"].split(":")
         bd, bp = link["to"].split(":")
         lab.link(ids[ad], ap, ids[bd], bp)
+        cable = lab.net.find("LINKS")[-1].find("CABLE")
+        for side, name, port in (("FROM", ad, ap), ("TO", bd, bp)):
+            dev, port_addresses = addresses[name]
+            set_text(cable, side + "_DEVICE_MEM_ADDR", str(dev))
+            set_text(cable, side + "_PORT_MEM_ADDR", str(port_addresses[port]))
         if link["cable"] == "cross":
-            lab.net.find("LINKS")[-1].find("CABLE/TYPE").text = "eCrossOver"
+            cable.find("TYPE").text = "eCrossOver"
     xml = ET.tostring(lab.base, encoding="utf-8", xml_declaration=True)
     validate_xml(xml)
     return s, xml, configs

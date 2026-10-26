@@ -12,6 +12,20 @@ from pkt_core.errors import PacketTracerError
 
 MODELS = ("2911", "2960-24TT", "PC-PT", "Server-PT")
 FILES = tuple(m + ".xml" for m in MODELS) + ("network_seed.xml",)
+CACHE_SCHEMA = 2
+
+def compatible_seed(document):
+    """Lab writes save-ref-id links; do not mix them with legacy index-based seeds.
+
+    The VERSION tag is insufficient: bundled files with the same version use
+    different reference styles. Require evidence in devices AND actual links.
+    """
+    devices = document.findall("NETWORK/DEVICES/DEVICE")
+    refs = [d.findtext("ENGINE/SAVE_REF_ID", "") for d in devices]
+    links = document.findall("NETWORK/LINKS/LINK/CABLE")
+    return (bool(devices) and bool(links) and len(set(refs)) == len(refs)
+            and all(r.startswith("save-ref-id:") for r in refs)
+            and all(c.findtext(side) in refs for c in links for side in ("FROM", "TO")))
 
 def installation(explicit=None):
     if explicit:
@@ -33,7 +47,7 @@ def installation(explicit=None):
 def cached(directory):
     try:
         manifest = json.loads((directory / "manifest.json").read_text(encoding="utf-8"))
-        if manifest.get("schema") != 1:
+        if manifest.get("schema") != CACHE_SCHEMA:
             return False
         return all(hashlib.sha256((directory / name).read_bytes()).hexdigest() == manifest["sha256"][name] for name in FILES)
     except (OSError, ValueError, KeyError, TypeError):
@@ -68,7 +82,7 @@ def prepare(workspace=".", pt_install=None, *, max_files=500, timeout=120):
                 if model in MODELS and model not in models:
                     models[model] = ET.tostring(device, encoding="utf-8")
                     sources[model] = str(path.relative_to(root))
-            if seed is None and document.find("PHYSICALWORKSPACE") is not None:
+            if seed is None and document.find("PHYSICALWORKSPACE") is not None and compatible_seed(document):
                 # Verify the physical workspace using the same reader as the builder.
                 # Lab needs a file; use a private staging file inside the workspace.
                 from lab_api import Lab
@@ -88,7 +102,7 @@ def prepare(workspace=".", pt_install=None, *, max_files=500, timeout=120):
             continue
     missing = [m for m in MODELS if m not in models]
     if seed is None:
-        missing.append("physical workspace seed")
+        missing.append("physical workspace seed dengan link save-ref-id")
     if missing:
         raise ValueError(f"Bootstrap belum lengkap setelah {scanned} sampel: {', '.join(missing)}. Gunakan instalasi PT dengan sampel model tersebut; tidak ada template tebakan yang dibuat.")
     payload = {m + ".xml": data for m, data in models.items()}
@@ -96,7 +110,7 @@ def prepare(workspace=".", pt_install=None, *, max_files=500, timeout=120):
     directory.mkdir(parents=True, exist_ok=True)
     for name, data in payload.items():
         local_path(directory / name, workspace).write_bytes(data)
-    manifest = {"schema": 1, "source": "installed-packet-tracer-samples", "version": version,
+    manifest = {"schema": CACHE_SCHEMA, "source": "installed-packet-tracer-samples", "version": version,
                 "files_scanned": scanned, "sources": sources,
                 "sha256": {name: hashlib.sha256(data).hexdigest() for name, data in payload.items()}}
     local_path(directory / "manifest.json", workspace).write_text(json.dumps(manifest, indent=2), encoding="utf-8")

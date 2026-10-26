@@ -158,6 +158,8 @@ Repository menyediakan ketiga spesifikasi YAML. File `.pkt` dibuat lokal saat bu
 
 ## Kompatibilitas dan batas penerimaan
 
+Jika hasil versi lama lambat pada **Opening file**, perbarui paket skill lalu build ulang dari spec atau preset ke folder hasil baru. Cache lama otomatis diperbarui untuk memakai referensi seed yang konsisten. Perbaikan mencakup ID memori perangkat/kabel dan pembersihan timeline donor; file `.pkt` lama tidak berubah otomatis. Validasi struktur/codec tidak membuktikan kecepatan buka GUI. Lihat [bukti pengujian](ACCEPTANCE.md).
+
 Bootstrap diuji memakai contoh bawaan instalasi **9.0.0**. Sampel dapat berasal dari versi PT lebih lama; versi sumber dicatat dalam manifest cache. Seed yang terpilih pada mesin pengujian bertag **7.1.0.0000**; angka ini bukan klaim kompatibilitas runtime. Dua percobaan peluncuran aplikasi tidak memberi jendela yang dapat ditarget alat otomasi. Tidak ada klaim file telah dibuka atau CLI diterapkan di PT. Jangan mengganti tag VERSION untuk memaksakan kompatibilitas. Runtime PT 7.x/8.x belum diuji.
 
 Validasi mencakup XML well-formed, model/port, nama/ID, IP ganda, gateway, VLAN, link yatim, port ganda, field asing, integritas codec dan round-trip. Validasi ini tidak membuktikan konektivitas, route convergence, atau penerapan konfigurasi oleh PT. Lihat `ACCEPTANCE.md` untuk hasil terukur dan pekerjaan yang tersisa.
