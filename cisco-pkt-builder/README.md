@@ -4,6 +4,8 @@ Paket skill dari PRD versi 0.1 untuk mengubah deskripsi jaringan melalui agent m
 
 ## Menjalankan
 
+Perintah chat singkat sekarang tersedia: `/pkt help`, `/pkt lan`, `/pkt vlan`, `/pkt ospf`, `/pkt buat <deskripsi>`, `/pkt edit <spec> <perubahan>`, `/pkt build`, `/pkt validate`, `/pkt decode`, dan `/pkt encode`. Lihat [daftar perintah](COMMANDS.md). Ini protokol agent setelah skill dimuat, bukan menu slash native yang terpasang otomatis.
+
 Untuk alur hemat token, gunakan `--preset lan|vlan|ospf --json-report` tanpa argumen spec. AI tidak perlu menulis ulang contoh atau membaca XML. Untuk kustomisasi, gunakan spec seperti biasa. Detail: [metode hemat token](TOKEN_EFFICIENCY.md).
 
 Python 3.10 atau lebih baru dan instalasi Cisco Packet Tracer dengan folder contoh `saves/`. Pengguna cukup menjelaskan topologi ke agent; build pertama mencari instalasi PT dan menyiapkan struktur perangkat otomatis. Tidak perlu mencari atau memasukkan template secara manual. Codec dan parser YAML disertakan sehingga proses tidak memerlukan jaringan, compiler, atau pip. Parser memakai SafeLoader.

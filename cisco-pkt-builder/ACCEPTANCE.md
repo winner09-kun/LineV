@@ -8,6 +8,8 @@ Pengguna menjelaskan jaringan ke agent. Agent membuat spec kecil atau memilih pr
 
 ## Bukti pengujian
 
+Pembaruan 26 Oktober 2026: 27 tes lulus setelah penambahan dispatcher `/pkt`. Tujuh tes baru memeriksa help tanpa eksekusi, pemetaan preset/opsi, pemilihan direktori baru, argumen tanpa shell, penolakan perintah asing, validasi melalui dispatcher dan pembatasan path. Smoke test dispatcher `lan` berhasil menghasilkan 4 perangkat/3 link dengan validasi XML dan round-trip. Ini bukan bukti registrasi menu slash native atau uji GUI PT.
+
 Bootstrap berhasil pada instalasi Packet Tracer 9.0.0 Windows setelah memeriksa 75 sampel bawaan. Empat model ditemukan: 2911, 2960-24TT, PC-PT dan Server-PT. Seed sampel bertag 7.1.0.0000; versi file sampel bukan klaim versi aplikasi yang telah menerima output.
 
 Seluruh 20 tes lulus. Tes mencakup tiga contoh round-trip, determinisme dengan cache yang sama, duplicate IP/port/link, gateway, VLAN/trunk, OSPF, DHCP/routing statis, integritas codec/cache, batas path, no-overwrite, preset, dan rebuild spec normalisasi.

@@ -5,6 +5,7 @@ Skill untuk membuat lab Cisco Packet Tracer dari deskripsi jaringan melalui YAML
 - [Panduan penggunaan dan instalasi](cisco-pkt-builder/README.md)
 - [Paket skill ZIP](cisco-pkt-builder.zip)
 - [Metode hemat token AI](cisco-pkt-builder/TOKEN_EFFICIENCY.md)
+- [Perintah chat /pkt](cisco-pkt-builder/COMMANDS.md)
 - [Status penerimaan dan batas kompatibilitas](cisco-pkt-builder/ACCEPTANCE.md)
 
 ```sh

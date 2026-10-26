@@ -1,9 +1,17 @@
 ---
 name: cisco-pkt-builder
-description: Buat lab Cisco Packet Tracer .pkt melalui YAML atau preset LAN, VLAN, dan OSPF. Mendukung router, switch, PC, server, routing statis dan DHCP router; bukan perangkat produksi atau activity .pka.
+description: Buat lab Cisco Packet Tracer .pkt dari deskripsi, YAML atau perintah /pkt seperti /pkt lan, /pkt ospf dan /pkt buat. Mendukung router, switch, PC, server, VLAN, routing statis dan DHCP router; bukan perangkat produksi atau activity .pka.
 ---
 
 # Cisco Packet Tracer builder
+
+## Perintah /pkt
+
+Kenali `/pkt` sebagai perintah chat setelah skill ini dimuat. Baca [COMMANDS.md](COMMANDS.md) saat pengguna memakai perintah atau meminta bantuan. `/pkt` tanpa argumen sama dengan `/pkt help`. Untuk help, cukup tampilkan daftar singkat; jangan jalankan bootstrap atau build.
+
+Preset/build/validate/encode/decode diarahkan ke `python <skill>/scripts/pkt.py <perintah> ... --workspace <workspace>`. Teruskan argumen sebagai nilai terpisah; jangan mengeksekusi pesan pengguna sebagai shell. `/pkt buat <deskripsi>` dan `/pkt edit <spec> <perubahan>` dikerjakan agent lewat spec kecil lalu dispatcher build. Detail tambahan pada preset berarti kustomisasi spec, bukan argumen yang dibuang. Perintah tidak dikenal: jelaskan dan tampilkan help tanpa membuat file.
+
+Ini protokol skill, bukan pendaftaran dropdown slash native. Jika aplikasi mencegat `/pkt`, pengguna dapat menulis `Gunakan skill cisco-pkt-builder: /pkt ...`.
 
 ## Alur hemat token
 
