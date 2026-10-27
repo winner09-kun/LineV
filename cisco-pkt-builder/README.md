@@ -196,6 +196,17 @@ Sintaks CLI mengikuti [Cisco BGP Configuration Guide](https://www.cisco.com/c/en
 
 Repository menyediakan empat spesifikasi YAML. File `.pkt` dibuat lokal saat build; XML, cache dan contoh biner tidak didistribusikan dalam paket publik.
 
+## Analisis file .pkt pengguna
+
+Gunakan `/pkt analisa "jaringan.pkt"` (alias `/pkt analyze`) untuk mencari kemungkinan
+kesalahan IP/mask, gateway, IP ganda, interface shutdown, kabel, subnet link dan ASN BGP.
+Tidak membutuhkan spec hasil generator, instalasi PT atau kontrol desktop. File asli
+tidak diubah; laporan menyertakan bukti dan saran. Detail penggunaan CLI serta batas
+pemeriksaan ada di [panduan analisis](references/analysis.md).
+
+Analisis tetap parsial: tanpa temuan tidak berarti jaringan pasti berfungsi.
+Simulasi, routing runtime dan ping tetap belum diuji.
+
 ## Kompatibilitas dan batas penerimaan
 
 Untuk memeriksa pemasangan ZIP tanpa cache/dependensi proyek lama, jalankan

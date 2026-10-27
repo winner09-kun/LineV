@@ -54,7 +54,7 @@ def run_checks(archive, output, pt_install=None, offline_only=False):
         script = package / "scripts" / "pkt.py"
         check("required-package-files", all((package / p).is_file() for p in
               ("SKILL.md", "agents/openai.yaml", "references/codex-gpt.md", "references/antigravity-gemini.md",
-               "scripts/check_topology.py", "vendor/yaml/__init__.py", "vendor/pkt_core/__init__.py")))
+               "scripts/check_topology.py", "scripts/analyze_pkt.py", "vendor/yaml/__init__.py", "vendor/pkt_core/__init__.py")))
         original = {str(p.relative_to(package)): hashlib.sha256(p.read_bytes()).hexdigest()
                     for p in package.rglob("*") if p.is_file()}
         for path in package.rglob("*.py"):

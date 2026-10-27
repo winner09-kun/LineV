@@ -16,6 +16,7 @@ HELP = """Perintah chat setelah skill dimuat:
 /pkt build <spec>                  Build YAML/JSON yang sudah ada
 /pkt validate <spec>               Periksa spec tanpa Packet Tracer
 /pkt check <folder-hasil>          Audit CLI/file .pkt offline, tanpa kontrol GUI
+/pkt analisa <file.pkt>            Diagnosis file mandiri tanpa spec (alias: analyze)
 /pkt decode <input.pkt> <out.xml>  Decode lokal
 /pkt encode <input.xml> <out.pkt>  Validasi dan encode lokal
 
@@ -54,6 +55,10 @@ def parser():
     cmd = commands.add_parser("check")
     cmd.add_argument("folder")
     cmd.add_argument("--workspace", default=".")
+    cmd = commands.add_parser("analisa", aliases=["analyze"])
+    cmd.add_argument("input")
+    cmd.add_argument("--workspace", default=".")
+    cmd.add_argument("--out")
     for name in ("decode", "encode"):
         cmd = commands.add_parser(name)
         cmd.add_argument("input")
@@ -63,6 +68,9 @@ def parser():
 
 def command_args(a):
     scripts = PACKAGE / "scripts"
+    if a.command in ("analisa", "analyze"):
+        args = [sys.executable, str(scripts / "analyze_pkt.py"), a.input, "--workspace", a.workspace]
+        return args + (["--out", a.out] if a.out else [])
     if a.command in ("lan", "vlan", "ospf", "bgp", "build"):
         out = a.out if a.out is not None else next_output(a.workspace, a.command)
         local_path(out, a.workspace)

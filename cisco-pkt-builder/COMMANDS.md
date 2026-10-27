@@ -17,6 +17,7 @@ Setelah skill dimuat, ketik salah satu perintah berikut di chat agent:
 | `/pkt build <spec.yaml>` | Membangun spec YAML/JSON yang sudah ada |
 | `/pkt validate <spec.yaml>` | Memeriksa spec tanpa memerlukan instalasi PT |
 | `/pkt check <folder-hasil>` | Audit CLI aktual di .pkt dan prediksi jalur offline, tanpa mengontrol desktop |
+| `/pkt analisa <file.pkt>` | Diagnosis file mandiri tanpa spec: IP, gateway, kabel, shutdown dan dugaan mismatch BGP; alias `analyze` |
 | `/pkt decode <input.pkt> <output.xml>` | Membaca struktur file .pkt lokal |
 | `/pkt encode <input.xml> <output.pkt>` | Memvalidasi XML lalu membuat .pkt |
 
@@ -28,6 +29,7 @@ Contoh:
 /pkt buat 2 router, 2 switch, 6 PC dengan OSPF area 0
 /pkt edit "spec kantor.yaml" tambah satu PC di subnet LAN pertama
 /pkt validate "spec kantor.yaml"
+/pkt analisa "jaringan kantor.pkt"
 ```
 
 Jika preset diberi penyesuaian bahasa natural, agent membaca satu contoh lalu membuat spec khusus. Jangan menjalankan preset mentah sambil mengabaikan penyesuaian. Untuk edit, pertahankan spec asli dengan membuat salinan revisi kecuali pengguna meminta pengubahan file itu langsung. Edit ini berlaku untuk spec, bukan modifikasi generik .pkt.
@@ -47,6 +49,10 @@ Awalan `/pkt` boleh ditulis sebagai argumen terpisah pada CLI. Jangan mengirim s
 Build menerima `--out`, `--workspace`, dan `--pt-install`. Tanpa `--out`, folder otomatis dipilih dari `hasil/lan`, `hasil/lan-2`, dan seterusnya (sesuai nama perintah). Folder eksplisit yang sudah ada ditolak oleh generator. Validasi menerima `--xml` untuk XML. Codec menerima `--workspace`. Semua pemeriksaan sebelumnya tetap berjalan.
 
 ## Kompatibilitas chat
+
+Analisa menerima `--workspace` dan `--out laporan-baru.json` opsional. Input tidak
+diubah. Temuan berisi bukti dan saran; hasil tanpa temuan bukan jaminan jaringan
+berfungsi. [Cakupan analisis](references/analysis.md) mencatat batas parser dan arti status.
 
 Perintah ini adalah konvensi yang dibaca agent dari skill; tidak otomatis menambahkan dropdown/autocomplete native aplikasi. Jika `/pkt` dicegat oleh aplikasi atau skill belum dimuat, gunakan:
 

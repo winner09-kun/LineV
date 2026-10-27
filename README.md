@@ -2,9 +2,13 @@
 
 Skill untuk membuat lab Cisco Packet Tracer dari deskripsi jaringan melalui YAML atau preset LAN, VLAN, OSPF, dan eBGP dengan kabel serial (`/pkt bgp`).
 
+Kini juga dapat menganalisis file pengguna: `/pkt analisa "jaringan.pkt"` mencari
+kemungkinan kesalahan dengan bukti dan saran, tanpa spec atau kontrol desktop.
+[Cakupan analisis](cisco-pkt-builder/references/analysis.md) tetap terbatas; bukan uji simulasi/ping.
+
 ## Instalasi singkat
 
-1. Siapkan Python 3.10+ dan Cisco Packet Tracer dengan contoh bawaan pada komputer agent.
+1. Siapkan Python 3.10+. Untuk membuat lab, siapkan juga Cisco Packet Tracer dengan contoh bawaan; analisis file saja tidak memerlukannya.
 2. Unduh [ZIP rilis](cisco-pkt-builder.zip) melalui **Download raw file**, lalu ekstrak.
 3. Salin folder `cisco-pkt-builder` ke `<proyek>/.agents/skills/cisco-pkt-builder/`.
 4. Buka proyek di Codex dengan GPT atau Antigravity dengan Gemini dan mulai chat baru.
