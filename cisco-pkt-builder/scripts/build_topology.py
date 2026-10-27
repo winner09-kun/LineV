@@ -12,10 +12,22 @@ from bootstrap import prepare, compatible_seed
 
 def clean_seed(root):
     """Remove donor playback/extension state, retaining physical hierarchy/UUIDs."""
-    for tag in ("COMMAND_LOGS", "USER_PROFILE", "CODE_TESTING", "SCENARIOSET", "SCRIPT_MODULE"):
+    # SCRIPT_MODULE is a structured application loader record, not a disposable
+    # log. Clearing it causes PT 9.0.0 to hang/crash after drawing the topology.
+    # Preserve its metadata, script containers and loading/saving fields.
+    for tag in ("COMMAND_LOGS", "USER_PROFILE", "CODE_TESTING"):
         node = root.find(tag)
         if node is not None:
             node.clear()
+    # A fresh lab still needs its default simulation scenario. Clearing the
+    # container discarded that required state along with donor PDUs.
+    scenarios = root.find("SCENARIOSET")
+    if scenarios is None:
+        scenarios = ET.SubElement(root, "SCENARIOSET")
+    scenarios.clear()
+    scenario = ET.SubElement(scenarios, "SCENARIO")
+    ET.SubElement(scenario, "NAME", translate="true").text = "Scenario 0"
+    ET.SubElement(scenario, "DESCRIPTION", translate="true")
     options = root.find("OPTIONS")
     if options is not None:
         for tag in ("RECENT_FILES", "SCRIPT_MODULE_MANAGER"):

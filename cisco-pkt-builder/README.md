@@ -1,6 +1,6 @@
 # Cisco Packet Tracer builder
 
-Paket skill dari PRD versi 0.1 untuk mengubah deskripsi jaringan melalui agent menjadi YAML, XML, dan `.pkt`. Paket ini menghasilkan lab LAN, VLAN/trunk, routing statis, OSPF, eBGP dasar melalui serial, dan DHCP router. **Status: kandidat MVP; penerimaan aplikasi belum terverifikasi.**
+Paket skill dari PRD versi 0.1 untuk mengubah deskripsi jaringan melalui agent menjadi YAML, XML, dan `.pkt`. Paket ini menghasilkan lab LAN, VLAN/trunk, routing statis, OSPF, eBGP dasar melalui serial, dan DHCP router. **Status: kandidat MVP; pembukaan LAN/BGP terverifikasi pada PT 9.0.0 Windows; konektivitas belum.**
 
 ## Menjalankan
 
@@ -183,9 +183,9 @@ Repository menyediakan empat spesifikasi YAML. File `.pkt` dibuat lokal saat bui
 
 Kedua profil mengikuti aturan berbasis bukti di [SKILL.md](SKILL.md): memakai kemampuan generator yang tersedia, menyatakan asumsi, tidak mengarang file/hasil tool, dan memisahkan validasi struktur dari pengujian GUI, CLI dan ping. Dugaan penyebab bug harus diberi label; hasil pengujian file lama tidak otomatis berlaku setelah rebuild. Tahap tanpa bukti dilaporkan **belum diuji**. Aturan ini mengurangi risiko kesalahan, bukan menjamin AI selalu benar.
 
-Jika hasil versi lama lambat pada **Opening file**, perbarui paket skill lalu build ulang dari spec atau preset ke folder hasil baru. Cache lama otomatis diperbarui untuk memakai referensi seed yang konsisten. Perbaikan mencakup ID memori perangkat/kabel dan pembersihan timeline donor; file `.pkt` lama tidak berubah otomatis. Validasi struktur/codec tidak membuktikan kecepatan buka GUI. Lihat [bukti pengujian](ACCEPTANCE.md).
+Jika hasil versi lama lambat pada **Opening file**, perbarui paket skill lalu build ulang dari spec atau preset ke folder hasil baru. Cache lama otomatis diperbarui untuk memakai referensi seed yang konsisten. Perbaikan 27 Oktober mempertahankan metadata loader SCRIPT_MODULE dan skenario simulasi default yang sebelumnya dikosongkan; file `.pkt` lama tidak berubah otomatis. Validasi struktur/codec tidak membuktikan kecepatan buka GUI. Lihat [bukti pengujian](ACCEPTANCE.md).
 
-Bootstrap diuji memakai contoh bawaan instalasi **9.0.0**. Sampel dapat berasal dari versi PT lebih lama; versi sumber dicatat dalam manifest cache. Seed yang terpilih pada mesin pengujian bertag **7.2.0.0000**; angka ini bukan klaim kompatibilitas runtime. Dua percobaan peluncuran aplikasi tidak memberi jendela yang dapat ditarget alat otomasi. Tidak ada klaim file telah dibuka atau CLI diterapkan di PT. Jangan mengganti tag VERSION untuk memaksakan kompatibilitas. Runtime PT 7.x/8.x belum diuji.
+Bootstrap diuji memakai contoh bawaan instalasi **9.0.0**. Sampel dapat berasal dari versi PT lebih lama; versi sumber dicatat dalam manifest cache. Seed yang terpilih pada mesin pengujian bertag **7.2.0.0000**; angka ini bukan klaim kompatibilitas runtime. Pengujian GUI 27 Oktober berhasil membuka hasil LAN/BGP sampai dialog Opening file hilang tanpa crash. Penerapan seluruh CLI, sesi BGP Established dan ping belum diverifikasi. Jangan mengganti tag VERSION untuk memaksakan kompatibilitas. Runtime PT 7.x/8.x belum diuji.
 
 Validasi mencakup XML well-formed, model/port, nama/ID, IP ganda, gateway, VLAN, link yatim, port ganda, field asing, integritas codec dan round-trip. Validasi ini tidak membuktikan konektivitas, route convergence, atau penerapan konfigurasi oleh PT. Lihat `ACCEPTANCE.md` untuk hasil terukur dan pekerjaan yang tersisa.
 

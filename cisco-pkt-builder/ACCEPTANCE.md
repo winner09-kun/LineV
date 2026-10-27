@@ -1,12 +1,14 @@
 # Status penerimaan PRD
 
-Tanggal 25 Oktober 2026. Kandidat MVP; pembukaan aplikasi belum terverifikasi.
+Status terbaru 27 Oktober 2026: kandidat MVP; pembukaan preset LAN/BGP terverifikasi pada Packet Tracer 9.0.0 Windows. Konektivitas belum diverifikasi. Catatan bertanggal sebelumnya di bawah adalah riwayat pengujian.
 
 ## Alur pengguna
 
 Pengguna menjelaskan jaringan ke agent. Agent membuat spec kecil atau memilih preset. Build mencari instalasi Packet Tracer dan mengekstrak struktur model dari contoh bawaan secara otomatis ke cache lokal. Pengguna tidak diminta menyiapkan template. Python 3.10+ dan Packet Tracer dengan contoh model yang dibutuhkan merupakan prasyarat.
 
 ## Bukti pengujian
+
+Perbaikan loading, 27 Oktober 2026: pengguna melaporkan crash/hang pada `bgp-foto`. Memulihkan hanya skenario default tidak menyelesaikan masalah. File satu PC dan BGP lengkap dengan metadata seed utuh berhasil dibuka. Kandidat BGP yang mempertahankan pembersihan lain tetapi memulihkan blok `SCRIPT_MODULE` juga selesai dibuka; ini mengisolasi pengosongan metadata loader sebagai pemicu pada instalasi yang diuji. Generator sekarang mempertahankan blok tersebut, menyediakan skenario default tanpa PDU donor, dan validator menolak blok loader/skenario kosong. 40 tes lulus. Hasil final `lan-loader-fixed/lab-lan.pkt` dan `bgp-loader-fixed/lab-bgp.pkt` dibuka melalui GUI sampai dialog Opening file hilang tanpa crash. LAN juga berhasil disimpan kembali oleh PT. Ini bukan benchmark waktu buka atau verifikasi ping/BGP Established; versi PT lain belum diuji.
 
 Pembaruan BGP/serial, 26 Oktober 2026: 36 tes lulus. Ditambahkan preset `bgp` (13 perangkat, 12 link), eBGP IPv4 langsung dengan validasi ASN/neighbor timbal balik, HWIC-2T slot 0 pada 2911, kabel serial dan DCE clock. Modul lokal ditemukan pada `saves/01 Networking/OSPF/ospf_network_lo_p2p.pkt`; XML donor tidak didistribusikan. Tes mencakup keempat preset round-trip, konsistensi running/startup/fallback CLI, port/power/clock serial, DCE kedua arah, idempotensi spec BGP, penolakan module hilang, cable/clock salah dan neighbor/network BGP salah. Bentuk dekoratif gambar tidak direplikasi. Pembukaan file, sesi BGP Established, route convergence dan ping belum diverifikasi di aplikasi.
 
@@ -39,7 +41,7 @@ Waktu sekitar 1,6 detik per contoh pada implementasi template lama adalah hasil 
 
 ## Batas penerimaan
 
-- Dua percobaan peluncuran PT melalui alat otomasi tidak menghasilkan jendela yang dapat ditarget. File belum dibuktikan terbuka atau menerapkan CLI. Uji ping bukan bagian wajib MVP.
+- Pembukaan GUI LAN/BGP kini terbukti pada PT 9.0.0 Windows. Penerapan seluruh CLI, ping dan BGP Established masih belum diverifikasi; keberhasilan dua preset bukan bukti semua file/versi kompatibel.
 - Instalasi bersih dan pemanggilan oleh orang lain pada Codex/Antigravity belum diuji. Deteksi instalasi Linux/macOS belum diuji.
 - Tiga YAML disertakan. Hasil .pkt/XML dibuat lokal, tidak didistribusikan di GitHub/ZIP. Ini perubahan pengemasan dari PRD agar bahan Cisco tidak ikut dipublikasikan.
 - Cache dan hasil lokal tidak memiliki izin distribusi tambahan dari lisensi kode paket. Jangan unggah otomatis.

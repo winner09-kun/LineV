@@ -125,6 +125,35 @@ class BuilderTests(unittest.TestCase):
         self.assertEqual(len(env.find("KEYFRAMES")), 1)
         self.assertEqual(env.findtext("ENVIRONMENT_OPTIONS/VALUE"), "initial")
 
+    def test_clean_seed_keeps_default_scenario_without_donor_pdus(self):
+        from build_topology import clean_seed
+        root = ET.fromstring('<PACKETTRACER5><SCENARIOSET><SCENARIO><NAME>Old scenario</NAME><PDU><SOURCE>old-device</SOURCE></PDU></SCENARIO></SCENARIOSET></PACKETTRACER5>')
+        clean_seed(root)
+        self.assertEqual(root.findtext("SCENARIOSET/SCENARIO/NAME"), "Scenario 0")
+        self.assertEqual(len(root.findall("SCENARIOSET/SCENARIO")), 1)
+        self.assertEqual(list(root.iter("PDU")), [])
+        clean_seed(root)
+        self.assertEqual(len(root.findall("SCENARIOSET/SCENARIO")), 1)
+
+    def test_empty_scenario_rejected(self):
+        root = ET.fromstring(build(self.spec)[1])
+        root.find("SCENARIOSET").clear()
+        with self.assertRaisesRegex(ValueError, "Skenario simulasi"):
+            validate_xml(ET.tostring(root))
+
+    def test_clean_seed_preserves_script_loader_record(self):
+        from build_topology import clean_seed
+        root = ET.fromstring('<PACKETTRACER5><SCRIPT_MODULE><PT_APP_META><LOADING>ON_STARTUP</LOADING><SAVING>NEVER</SAVING><INSTANCES>1</INSTANCES></PT_APP_META><SCRIPTS><SCRIPT_DATA_STORES /></SCRIPTS><INTERFACES /></SCRIPT_MODULE></PACKETTRACER5>')
+        before = ET.tostring(root.find("SCRIPT_MODULE"))
+        clean_seed(root)
+        self.assertEqual(before, ET.tostring(root.find("SCRIPT_MODULE")))
+
+    def test_empty_script_loader_rejected(self):
+        root = ET.fromstring(build(self.spec)[1])
+        root.find("SCRIPT_MODULE").clear()
+        with self.assertRaisesRegex(ValueError, "SCRIPT_MODULE"):
+            validate_xml(ET.tostring(root))
+
     def test_duplicate_ip(self):
         self.spec["devices"][3]["ip"] = self.spec["devices"][2]["ip"]
         with self.assertRaisesRegex(ValueError, "IP ganda"):

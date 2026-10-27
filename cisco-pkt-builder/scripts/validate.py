@@ -226,6 +226,12 @@ def validate_xml(data):
     require(b"<!ENTITY" not in data.upper() and b"<!DOCTYPE" not in data.upper(), "DTD/entity XML tidak didukung")
     root = ET.fromstring(data)
     require(root.tag == "PACKETTRACER5", "Bukan XML topologi .pkt")
+    scenarios = root.findall("SCENARIOSET/SCENARIO")
+    require(scenarios and all(s.findtext("NAME") for s in scenarios), "Skenario simulasi XML kosong; build ulang dengan generator terbaru")
+    script = root.find("SCRIPT_MODULE")
+    if script is not None:
+        require(script.find("PT_APP_META") is not None and script.find("SCRIPTS") is not None,
+                "Metadata SCRIPT_MODULE XML tidak lengkap; build ulang dengan generator terbaru")
     devs = root.findall("NETWORK/DEVICES/DEVICE")
     ids, names, used_ips = {}, set(), {}
     device_refs, memory_ids = {}, set()
