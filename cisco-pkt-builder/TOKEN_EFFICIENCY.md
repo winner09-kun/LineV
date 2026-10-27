@@ -2,6 +2,10 @@
 
 AI memilih desain dan menulis perubahan kecil; Python menangani validasi, CLI, XML dan codec. Script tidak memanggil model/API. Penghematan bergantung pada ukuran lab dan perilaku agent; belum diukur sebagai persentase atau biaya.
 
+Untuk kebutuhan ambigu, pakai [klarifikasi singkat](references/requirements.md)
+sebelum build. Simpan keputusan dalam brief dan tanyakan bagian yang belum terjawab
+saja; hemat token bukan alasan melewati kebutuhan wajib atau menebak jawaban pengguna.
+
 | Kebutuhan | Tindakan AI |
 |---|---|
 | Lab persis preset | Pilih lan, vlan, atau ospf; langsung build |

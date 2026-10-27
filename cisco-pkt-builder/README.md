@@ -196,6 +196,19 @@ Sintaks CLI mengikuti [Cisco BGP Configuration Guide](https://www.cisco.com/c/en
 
 Repository menyediakan empat spesifikasi YAML. File `.pkt` dibuat lokal saat build; XML, cache dan contoh biner tidak didistribusikan dalam paket publik.
 
+## Klarifikasi kebutuhan topologi
+
+Untuk permintaan seperti "buat jaringan kantor", skill menanyakan bagian yang belum
+jelas: jumlah perangkat/divisi, siapa perlu saling terhubung, serta IP/protokol atau
+aturan tugas yang wajib. Pertanyaan dibatasi maksimal tiga per giliran dan jawaban
+sebelumnya dipakai kembali. Setelah jelas, agent merangkum desain, menyimpan brief
+untuk topologi khusus, dan mencocokkan spec/hasil dengan kebutuhan tersebut.
+
+Preset eksplisit atau deskripsi lengkap tidak memerlukan wawancara tambahan.
+"Atur aja" mengizinkan agent memilih default sambil menyatakan asumsi. Ini
+[alur kerja percakapan](references/requirements.md), bukan jaminan pemahaman sempurna
+atau parser kebutuhan otomatis pada CLI Python.
+
 ## Analisis file .pkt pengguna
 
 Gunakan `/pkt analisa "jaringan.pkt"` (alias `/pkt analyze`) untuk mencari kemungkinan

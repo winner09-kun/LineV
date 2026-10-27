@@ -4,6 +4,9 @@ Panduan kerja untuk host Codex yang memakai model GPT pilihan pengguna. Tidak me
 
 ## Aktivasi dan eksekusi
 
+Sebelum desain khusus, ikuti [klarifikasi kebutuhan](requirements.md). Pertanyaan
+dan brief mengikuti alur yang sama pada semua profil; tool host hanya sarana bertanya.
+
 - Skill berada di `.agents/skills/cisco-pkt-builder` pada workspace atau `~/.agents/skills/cisco-pkt-builder` untuk pengguna. Aktifkan dengan `$cisco-pkt-builder` pada permukaan yang mendukungnya, atau sebutkan nama skill. `/pkt` adalah protokol internal sesudah skill dimuat.
 - Resolusi path: gunakan direktori SKILL.md yang benar-benar dimuat sebagai akar script; gunakan direktori proyek pengguna sebagai `--workspace`. Jangan mengasumsikan cwd sama dengan folder skill. Output dan cache tetap di proyek, termasuk saat skill dipasang global.
 - Preset standar: satu panggilan terminal ke `scripts/pkt.py`. Gunakan tool filesystem/patch yang tersedia untuk spec khusus. Jangan minta model menulis XML atau menyalin source codec.

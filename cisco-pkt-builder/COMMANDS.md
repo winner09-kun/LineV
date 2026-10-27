@@ -34,6 +34,11 @@ Contoh:
 
 Jika preset diberi penyesuaian bahasa natural, agent membaca satu contoh lalu membuat spec khusus. Jangan menjalankan preset mentah sambil mengabaikan penyesuaian. Untuk edit, pertahankan spec asli dengan membuat salinan revisi kecuali pengguna meminta pengubahan file itu langsung. Edit ini berlaku untuk spec, bukan modifikasi generik .pkt.
 
+Untuk permintaan yang belum jelas, agent mengikuti [alur klarifikasi kebutuhan](references/requirements.md):
+merangkum konteks, bertanya maksimal tiga hal penting per giliran, lalu menyusun desain
+berdasarkan jawaban. Preset eksplisit atau kebutuhan lengkap langsung dikerjakan.
+Pengguna boleh menyerahkan pilihan dengan "atur aja"; asumsi tetap dijelaskan.
+
 ## Eksekusi oleh agent
 
 Perintah operasional memiliki dispatcher deterministik:

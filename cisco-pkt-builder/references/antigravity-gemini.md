@@ -4,6 +4,9 @@ Panduan kerja untuk Antigravity yang memakai model Gemini pilihan pengguna. Buka
 
 ## Aktivasi dan eksekusi
 
+Sebelum desain khusus, ikuti [klarifikasi kebutuhan](requirements.md). Pertanyaan
+dan brief mengikuti alur yang sama pada semua profil; tool host hanya sarana bertanya.
+
 - Utamakan lokasi workspace `.agents/skills/cisco-pkt-builder`. Sebutkan skill dengan nama; App/CLI yang mendukung pemanggilan skill lewat slash dapat memakai `/cisco-pkt-builder`. Jangan menganggap `/pkt` menjadi menu native: itu protokol internal paket. Pada IDE, periksa daftar skill aktif di Customizations bila skill belum ditemukan.
 - Gunakan script sebagai alat siap pakai. Bila argumen belum jelas, baca `scripts/pkt.py --help` atau `COMMANDS.md`, bukan seluruh kode/template. Gunakan path absolut folder skill yang dimuat dan `--workspace` proyek pengguna.
 - Jika tugas berjalan dalam mode yang meminta rencana/artifact review, patuhi alur host. Untuk lab kompleks, rencana cukup perangkat, subnet, VLAN dan routing serta asumsi penting; jangan membuat rencana panjang atau mengulang pertanyaan untuk preset sederhana.
