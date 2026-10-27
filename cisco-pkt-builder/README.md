@@ -198,6 +198,10 @@ Repository menyediakan empat spesifikasi YAML. File `.pkt` dibuat lokal saat bui
 
 ## Kompatibilitas dan batas penerimaan
 
+Untuk memeriksa pemasangan ZIP tanpa cache/dependensi proyek lama, jalankan
+[uji instalasi bersih](COMPATIBILITY.md). Laporan mencatat lingkungan dan hash ZIP;
+dukungan komputer atau versi lain tidak disimpulkan dari keberhasilan uji lokal.
+
 ### Aturan anti-halusinasi
 
 Kedua profil mengikuti aturan berbasis bukti di [SKILL.md](SKILL.md): memakai kemampuan generator yang tersedia, menyatakan asumsi, tidak mengarang file/hasil tool, dan memisahkan validasi struktur dari pengujian GUI, CLI dan ping. Dugaan penyebab bug harus diberi label; hasil pengujian file lama tidak otomatis berlaku setelah rebuild. Tahap tanpa bukti dilaporkan **belum diuji**. Aturan ini mengurangi risiko kesalahan, bukan menjamin AI selalu benar.

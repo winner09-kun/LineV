@@ -49,6 +49,14 @@ class CommandTests(unittest.TestCase):
             self.assertEqual(error.exception.code, 2)
             run.assert_not_called()
 
+    def test_child_preserves_isolation_and_uses_utf8(self):
+        from types import SimpleNamespace
+        with patch.object(pkt.sys, "flags", SimpleNamespace(no_site=1)), \
+             patch.object(pkt.sys, "dont_write_bytecode", True), \
+             patch.object(pkt.subprocess, "run", return_value=subprocess.CompletedProcess([], 0)) as run:
+            self.assertEqual(pkt.main(["validate", "lab.yaml"]), 0)
+            self.assertEqual(run.call_args.args[0][1:5], ["-X", "utf8", "-S", "-B"])
+
     def test_validate_dispatch_integration(self):
         result = subprocess.run([sys.executable, str(ROOT / "scripts/pkt.py"), "/pkt", "validate",
             "examples/lan.yaml", "--workspace", str(ROOT)], capture_output=True, text=True)

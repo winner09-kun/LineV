@@ -92,7 +92,14 @@ def main(argv=None):
         print(HELP)
         return 0
     try:
-        return subprocess.run(command_args(a), shell=False).returncode
+        command = command_args(a)
+        # Interpreter flags are not inherited by subprocesses on Windows.
+        flags = ["-X", "utf8"]
+        if sys.flags.no_site:
+            flags.append("-S")
+        if sys.dont_write_bytecode:
+            flags.append("-B")
+        return subprocess.run([command[0], *flags, *command[1:]], shell=False).returncode
     except (ValueError, OSError) as exc:
         p.exit(2, f"Perintah gagal: {exc}\n")
 
