@@ -15,6 +15,7 @@ HELP = """Perintah chat setelah skill dimuat:
 /pkt edit <spec> <perubahan>       Agent menyalin/mengedit spec lalu build baru
 /pkt build <spec>                  Build YAML/JSON yang sudah ada
 /pkt validate <spec>               Periksa spec tanpa Packet Tracer
+/pkt check <folder-hasil>          Audit CLI/file .pkt offline, tanpa kontrol GUI
 /pkt decode <input.pkt> <out.xml>  Decode lokal
 /pkt encode <input.xml> <out.pkt>  Validasi dan encode lokal
 
@@ -50,6 +51,9 @@ def parser():
     cmd.add_argument("spec")
     cmd.add_argument("--workspace", default=".")
     cmd.add_argument("--xml", action="store_true")
+    cmd = commands.add_parser("check")
+    cmd.add_argument("folder")
+    cmd.add_argument("--workspace", default=".")
     for name in ("decode", "encode"):
         cmd = commands.add_parser(name)
         cmd.add_argument("input")
@@ -71,6 +75,8 @@ def command_args(a):
     if a.command == "validate":
         args = [sys.executable, str(scripts / "validate.py"), a.spec, "--workspace", a.workspace]
         return args + (["--xml"] if a.xml else [])
+    if a.command == "check":
+        return [sys.executable, str(scripts / "check_topology.py"), a.folder, "--workspace", a.workspace]
     return [sys.executable, str(scripts / "pkt_codec.py"), a.command,
             a.input, a.output, "--workspace", a.workspace]
 

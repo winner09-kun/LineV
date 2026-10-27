@@ -16,6 +16,7 @@ Setelah skill dimuat, ketik salah satu perintah berikut di chat agent:
 | `/pkt edit <spec> <perubahan>` | AI merevisi spec dan membangun hasil baru |
 | `/pkt build <spec.yaml>` | Membangun spec YAML/JSON yang sudah ada |
 | `/pkt validate <spec.yaml>` | Memeriksa spec tanpa memerlukan instalasi PT |
+| `/pkt check <folder-hasil>` | Audit CLI aktual di .pkt dan prediksi jalur offline, tanpa mengontrol desktop |
 | `/pkt decode <input.pkt> <output.xml>` | Membaca struktur file .pkt lokal |
 | `/pkt encode <input.xml> <output.pkt>` | Memvalidasi XML lalu membuat .pkt |
 

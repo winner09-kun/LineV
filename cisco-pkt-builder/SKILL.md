@@ -17,6 +17,12 @@ Preset/build/validate/encode/decode diarahkan ke `python <skill>/scripts/pkt.py 
 
 Ini protokol skill, bukan pendaftaran dropdown slash native. Jika aplikasi mencegat `/pkt`, pengguna dapat menulis `Gunakan skill cisco-pkt-builder: /pkt ...`.
 
+## Pemeriksaan CLI tanpa kontrol desktop
+
+`/pkt check <folder-hasil>` menjalankan `scripts/pkt.py check <folder-hasil> --workspace <workspace>` secara read-only. Baca konfigurasi aktual dari `.pkt`, bukan XML samping yang mungkin kedaluwarsa. Setiap build baru juga menjalankan audit ini dan menghasilkan `check-report.json`; cukup baca status ringkas terlebih dahulu, detail errors/warnings sesuai kebutuhan. Tidak memerlukan GUI, login, API key, atau akses perangkat jaringan. Jangan mengontrol desktop untuk pemeriksaan ini.
+
+`failed` berarti ada ketidaksesuaian file/spec/CLI: perbaiki spec atau generator lalu build ke folder baru dan cek ulang. `partial` berarti ada bagian di luar cakupan atau peringatan, bukan sukses penuh. `passed_static` hanya audit statis. `predicted_reachable` adalah prediksi flat LAN/eBGP, bukan hasil ping. Parser semantik mencakup hostname, interface IP/shutdown, BGP dasar, clock DCE dan kecocokan hardware; VLAN/OSPF/static/DHCP hanya dicek konsistensi salinan CLI dan validitas spec, sehingga jalurnya `unknown`. Instruksi CLI asing juga menghasilkan peringatan. Tidak boleh mengklaim IOS dieksekusi, BGP Established, GUI lolos, atau ping sukses dari laporan offline. Uji runtime memerlukan simulator yang benar-benar berjalan; jika tidak tersedia, nyatakan belum diuji tanpa menebak API headless.
+
 ## Alur hemat token
 
 1. Pilih preset bila persis sesuai kebutuhan: `lan` (1 router, 1 switch, 2 PC), `vlan` (2 switch, 3 PC, 1 server, VLAN 10/20), `ospf` (2 router, 2 switch, 4 PC), atau `bgp` (3 router serial, 3 switch, 7 PC, AS 100/200/300). Langsung build; jangan baca/tulis ulang YAML.

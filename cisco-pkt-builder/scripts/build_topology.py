@@ -9,6 +9,7 @@ from validate import normalize, validate_xml, address, ports
 from pkt_core import encode_bytes, decode_bytes
 from lab_api import Lab
 from bootstrap import prepare, compatible_seed
+from check_topology import audit
 
 def clean_seed(root):
     """Remove donor playback/extension state, retaining physical hierarchy/UUIDs."""
@@ -240,7 +241,7 @@ def summary(s):
     for link in s["links"]:
         if link["cable"] == "serial":
             lines += ["", f"Serial DCE: {link[link['dce']]} — clock rate {link['clock_rate']}."]
-    lines += ["", "Validasi struktur dan round-trip codec lulus. Pembukaan di Packet Tracer dan penerapan CLI perlu diverifikasi di aplikasi; laporan ini bukan hasil ping.", ""]
+    lines += ["", "Validasi struktur dan round-trip codec lulus. Audit CLI offline otomatis ada di check-report.json; periksa warnings dan status partial. Pembukaan di Packet Tracer dan penerapan CLI perlu diverifikasi di aplikasi; laporan ini bukan hasil ping.", ""]
     return "\n".join(lines)
 
 def main():
@@ -265,18 +266,24 @@ def main():
         pkt = encode_bytes(xml, "pkt")
         if decode_bytes(pkt, "pkt").xml != xml:
             raise ValueError("Round-trip codec gagal")
+        audit_report = audit(s, xml, configs)
+        if audit_report["errors"]:
+            raise ValueError("Audit CLI gagal: " + "; ".join(audit_report["errors"]))
         out.mkdir(parents=True)
         write_new(out / (s["name"] + ".xml"), xml)
         write_new(out / (s["name"] + ".pkt"), pkt)
         write_new(out / "topology.json", json.dumps(s, indent=2).encode())
         write_new(out / "summary.md", summary(s).encode("utf-8"))
+        import hashlib
+        audit_report["pkt_sha256"] = hashlib.sha256(pkt).hexdigest()
+        write_new(out / "check-report.json", json.dumps(audit_report, ensure_ascii=False, indent=2).encode("utf-8"))
         for name, config in configs.items():
             write_new(out / "configs" / (name + ".txt"), config.encode())
         pkt_path = out / (s["name"] + ".pkt")
         if a.json_report:
             print(json.dumps({"status": "ok", "devices": len(s["devices"]), "links": len(s["links"]),
                               "pkt": str(pkt_path), "summary": str(out / "summary.md"),
-                              "checks": "spec+xml+roundtrip", "pt_gui": "not_tested"}, separators=(",", ":")))
+                              "checks": "spec+xml+roundtrip+offline_cli", "offline_audit": audit_report["status"], "pt_gui": "not_tested"}, separators=(",", ":")))
         else:
             print(pkt_path)
     except (ValueError, KeyError, TypeError, OSError, ET.ParseError) as exc:

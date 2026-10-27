@@ -26,6 +26,7 @@ Mode memilih panduan kerja, bukan mengganti model aplikasi. Petunjuk instalasi g
 - [Paket skill ZIP](cisco-pkt-builder.zip)
 - [Metode hemat token AI](cisco-pkt-builder/TOKEN_EFFICIENCY.md)
 - [Perintah chat /pkt](cisco-pkt-builder/COMMANDS.md)
+- [Audit CLI otomatis tanpa kontrol desktop](cisco-pkt-builder/README.md#pemeriksaan-otomatis-tanpa-membuka-packet-tracer): `/pkt check <folder-hasil>`. Audit offline bukan bukti ping atau sesi BGP berhasil.
 - [Status penerimaan dan batas kompatibilitas](cisco-pkt-builder/ACCEPTANCE.md)
 
 ```sh

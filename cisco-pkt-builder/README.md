@@ -117,6 +117,25 @@ Skill tidak ditemukan: periksa path SKILL.md, mulai chat baru, lalu minta agent 
 
 Pilih dengan `/pkt mode <profil>` di chat. Ini panduan untuk agent, bukan flag model/API pada Python. Hanya satu profil dibaca agar konteks tetap kecil. Generator/validator sama untuk semua profil, sehingga pilihan model tidak mengubah aturan validasi. Perbedaan perilaku antarversi model belum diuji secara empiris; tidak ada klaim satu keluarga model selalu lebih baik. Uji instalasi lengkap oleh pengguna pada kedua aplikasi masih diperlukan.
 
+## Pemeriksaan otomatis tanpa membuka Packet Tracer
+
+Setiap build menjalankan audit konfigurasi dan menyimpan `check-report.json`. Error audit menghentikan build sebelum menulis hasil. Untuk memeriksa ulang folder hasil yang sudah ada:
+
+```text
+/pkt check hasil/bgp-loader-fixed
+```
+
+```sh
+python cisco-pkt-builder/scripts/pkt.py check hasil/bgp-loader-fixed --workspace .
+```
+
+Pemeriksa membaca `.pkt` aktual, `topology.json` dan `configs/*.txt`. XML samping tidak dipercaya sebagai keadaan file terbaru. Tidak ada kontrol mouse/keyboard, login, API key, jaringan atau proses Packet Tracer. Command `check` hanya membaca dan mengeluarkan laporan JSON ke stdout, disertai SHA-256 file. Folder harus berisi paket hasil generator; audit sembarang `.pkt` tanpa spec belum tersedia.
+
+- Pemeriksaan: perangkat/kabel/power, hostname, IP/mask/gateway, interface `no shutdown`, ASN/neighbor/network BGP, DCE dan clock hardware/CLI, serta kesamaan running/startup/fallback CLI.
+- `passed_static`: pemeriksaan dalam cakupan lolos. `failed`: error ditemukan, exit code 2. `partial`: ada peringatan/fitur di luar cakupan; exit code 0 berarti audit selesai, bukan bukti simulasi sukses.
+- Prediksi dua arah antarhost hanya untuk flat LAN dan eBGP langsung dengan AS unik. VLAN, OSPF, static route, DHCP, AS berulang atau CLI asing menghasilkan `unknown` untuk jalur terkait, secara konservatif dapat mencakup seluruh lab. Parser ini bukan emulator IOS atau pemeriksa semua sintaks IOS.
+- `predicted_reachable` tidak berarti ping sudah dijalankan. Bagian `runtime` selalu `not_tested` untuk pemeriksaan ini, walaupun ada laporan GUI terpisah. Tidak menyimpulkan konvergensi atau BGP Established. File yang disimpan ulang oleh PT dapat memiliki default CLI tambahan dan menghasilkan peringatan/perbedaan; tinjau sebelum mengubah konfigurasi.
+
 ## Skema input
 
 Top-level: `name`, `devices`, `links`. Nama memakai huruf awal, lalu huruf/angka/underscore/hyphen, maksimum 63 karakter. Field asing ditolak agar fitur tidak hilang diam-diam. Input JSON juga didukung.
