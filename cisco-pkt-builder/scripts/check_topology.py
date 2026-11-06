@@ -35,6 +35,11 @@ def parse_cli(lines):
                 section["enabled"] = line == "no shutdown"
             elif line.startswith("clock rate "):
                 section["clock_rate"] = int(line.split()[-1])
+            elif line.startswith("encapsulation dot1Q "):
+                match = re.fullmatch(r"encapsulation dot1Q (\d+)( native)?", line)
+                if match:
+                    section["vlan"] = int(match.group(1))
+                    section["native"] = bool(match.group(2))
             elif "neighbors" in section:
                 match = re.fullmatch(r"neighbor (\S+) remote-as (\d+)", line)
                 if match:
@@ -65,7 +70,7 @@ def predict_paths(spec):
     """
     ds = {d["id"]: d for d in spec["devices"]}
     hosts = [d for d in ds.values() if d["type"] in ("pc", "server") and "ip" in d]
-    unsupported = any(d["vlans"] or d["ports"] or set(d["config"]) - {"bgp"} for d in ds.values())
+    unsupported = any(d["vlans"] or d["ports"] or d.get("subinterfaces") or set(d["config"]) - {"bgp"} for d in ds.values())
     asns = [d["config"]["bgp"]["asn"] for d in ds.values() if "bgp" in d["config"]]
     unsupported = unsupported or len(asns) != len(set(asns))
     l2, bgp = {}, {}
@@ -163,6 +168,24 @@ def audit(spec, xml, configs=None):
                 addr = ip.ip_interface(d["ip"])
                 check(any(p.findtext("IP") == str(addr.ip) and p.findtext("SUBNET") == str(addr.netmask) for p in dev.iter("PORT")), f"{name}: IP/mask host berbeda")
                 check((dev.findtext("ENGINE/GATEWAY") or "") == d.get("gateway", ""), f"{name}: gateway host berbeda")
+            if d.get("dns"):
+                port = dev.find(".//PORT")
+                check(port is not None and port.findtext("PORT_DNS") == d["dns"]
+                      and dev.findtext("ENGINE/DNS_CLIENT/SERVER_IP") == d["dns"],
+                      f"{name}: DNS host berbeda/hilang")
+            if d["type"] == "server":
+                services = d.get("services", {})
+                check(dev.findtext("ENGINE/HTTP_SERVER/ENABLED") == ("1" if services.get("http") else "0"),
+                      f"{name}: status HTTP berbeda dari spec")
+                check(dev.findtext("ENGINE/HTTPS_SERVER/HTTPSENABLED") == ("1" if services.get("https") else "0"),
+                      f"{name}: status HTTPS berbeda dari spec")
+                records = services.get("dns", {})
+                check(dev.findtext("ENGINE/DNS_SERVER/ENABLED") == ("1" if records else "0"),
+                      f"{name}: status DNS berbeda dari spec")
+                actual_records = {rec.findtext("NAME"): rec.findtext("IPADDRESS")
+                                  for rec in dev.findall("ENGINE/DNS_SERVER/NAMESERVER-DATABASE/RESOURCE-RECORD")
+                                  if rec.findtext("TYPE") == "A-REC"}
+                check(actual_records == records, f"{name}: record DNS berbeda dari spec")
             continue
         running = [n.text or "" for n in dev.findall("ENGINE/RUNNINGCONFIG/LINE")]
         startup = [n.text or "" for n in dev.findall("ENGINE/STARTUPCONFIG/LINE")]
@@ -171,9 +194,23 @@ def audit(spec, xml, configs=None):
         if configs is not None:
             check(name in configs and canonical(configs.get(name, "").splitlines()) == canonical(running), f"{name}: file fallback CLI berbeda/hilang")
         parsed = parse_cli(running)
-        check({p: v["ip"] for p, v in parsed["interfaces"].items() if "ip" in v} ==
-              {p: str(ip.ip_interface(v)) for p, v in d["interfaces"].items()}, f"{name}: himpunan interface IP CLI berbeda dari spec")
-        supported_line = r"(?:!|version \S+|hostname \S+|no ip domain-lookup|interface \S+|ip address \S+ \S+|no shutdown|shutdown|exit|end|router bgp \d+|no auto-summary|network \S+ mask \S+|neighbor \S+ remote-as \d+|clock rate \d+)"
+        physical = {p: v["ip"] for p, v in parsed["interfaces"].items() if "ip" in v and "." not in p}
+        check(physical == {p: str(ip.ip_interface(v)) for p, v in d["interfaces"].items()},
+              f"{name}: himpunan interface IP CLI berbeda dari spec")
+        subs = d.get("subinterfaces", {})
+        check({p for p in parsed["interfaces"] if "." in p} == set(subs),
+              f"{name}: daftar subinterface CLI berbeda dari spec")
+        for sub_name, sub in subs.items():
+            got = parsed["interfaces"].get(sub_name, {})
+            check(got.get("ip") == str(ip.ip_interface(sub["ip"])), f"{name}:{sub_name}: IP subinterface berbeda/hilang")
+            check(got.get("enabled") is True, f"{name}:{sub_name}: no shutdown hilang")
+            check(got.get("vlan") == sub["vlan"], f"{name}:{sub_name}: encapsulation dot1Q berbeda/hilang")
+            check(bool(got.get("native")) == sub["native"], f"{name}:{sub_name}: flag native berbeda")
+            parent = sub_name.rpartition(".")[0]
+            if parent not in d["interfaces"]:
+                check(parsed["interfaces"].get(parent, {}).get("enabled") is True,
+                      f"{name}:{parent}: no shutdown parent subinterface hilang")
+        supported_line = r"(?:!|version \S+|hostname \S+|no ip domain-lookup|interface \S+|ip address \S+ \S+|no shutdown|shutdown|exit|end|router bgp \d+|no auto-summary|network \S+ mask \S+|neighbor \S+ remote-as \d+|clock rate \d+|encapsulation dot1Q \d+(?: native)?)"
         unknown = [line.strip() for line in running if line.strip() and not re.fullmatch(supported_line, line.strip())]
         if unknown:
             warnings.append(f"{name}: {len(unknown)} baris CLI di luar cakupan parser; prediksi jalur tidak disimpulkan")
@@ -192,6 +229,8 @@ def audit(spec, xml, configs=None):
             check(not parsed["bgp"], f"{name}: BGP tidak diminta spec")
         if d["vlans"] or d["ports"] or set(d["config"]) - {"bgp"}:
             warnings.append(f"{name}: semantik VLAN/OSPF/static/DHCP belum diaudit; hanya konsistensi salinan CLI")
+        if d.get("subinterfaces"):
+            warnings.append(f"{name}: subinterface 802.1Q diaudit untuk konfigurasi; jalur antar-VLAN belum dimodelkan")
         for link in s["links"]:
             if link["cable"] == "serial":
                 endpoint = link[link["dce"]]

@@ -131,9 +131,9 @@ python cisco-pkt-builder/scripts/pkt.py check hasil/bgp-loader-fixed --workspace
 
 Pemeriksa membaca `.pkt` aktual, `topology.json` dan `configs/*.txt`. XML samping tidak dipercaya sebagai keadaan file terbaru. Tidak ada kontrol mouse/keyboard, login, API key, jaringan atau proses Packet Tracer. Command `check` hanya membaca dan mengeluarkan laporan JSON ke stdout, disertai SHA-256 file. Folder harus berisi paket hasil generator; audit sembarang `.pkt` tanpa spec belum tersedia.
 
-- Pemeriksaan: perangkat/kabel/power, hostname, IP/mask/gateway, interface `no shutdown`, ASN/neighbor/network BGP, DCE dan clock hardware/CLI, serta kesamaan running/startup/fallback CLI.
+- Pemeriksaan: perangkat/kabel/power, hostname, IP/mask/gateway, interface `no shutdown`, subinterface `encapsulation dot1Q`, ASN/neighbor/network BGP, DCE dan clock hardware/CLI, serta kesamaan running/startup/fallback CLI.
 - `passed_static`: pemeriksaan dalam cakupan lolos. `failed`: error ditemukan, exit code 2. `partial`: ada peringatan/fitur di luar cakupan; exit code 0 berarti audit selesai, bukan bukti simulasi sukses.
-- Prediksi dua arah antarhost hanya untuk flat LAN dan eBGP langsung dengan AS unik. VLAN, OSPF, static route, DHCP, AS berulang atau CLI asing menghasilkan `unknown` untuk jalur terkait, secara konservatif dapat mencakup seluruh lab. Parser ini bukan emulator IOS atau pemeriksa semua sintaks IOS.
+- Prediksi dua arah antarhost hanya untuk flat LAN dan eBGP langsung dengan AS unik. VLAN, subinterface 802.1Q, OSPF, static route, DHCP, AS berulang atau CLI asing menghasilkan `unknown` untuk jalur terkait, secara konservatif dapat mencakup seluruh lab. Parser ini bukan emulator IOS atau pemeriksa semua sintaks IOS.
 - `predicted_reachable` tidak berarti ping sudah dijalankan. Bagian `runtime` selalu `not_tested` untuk pemeriksaan ini, walaupun ada laporan GUI terpisah. Tidak menyimpulkan konvergensi atau BGP Established. File yang disimpan ulang oleh PT dapat memiliki default CLI tambahan dan menghasilkan peringatan/perbedaan; tinjau sebelum mengubah konfigurasi.
 
 ## Skema input
@@ -143,7 +143,8 @@ Top-level: `name`, `devices`, `links`. Nama memakai huruf awal, lalu huruf/angka
 Perangkat memerlukan `id`, `type`; `model` dan `position: [x, y]` opsional. Model MVP: router `2911`, switch `2960` atau `2960-24TT`, pc `PC-PT`, server `Server-PT`. Koordinat 0–3800. Default posisi grid dengan jarak 220 × 200. Maksimum 100 perangkat.
 
 - Router: `interfaces: {Gi0/0: 192.168.10.1/24}`. Port Gi0/0 sampai Gi0/2. Tambahkan `module: HWIC-2T` untuk Se0/0/0 dan Se0/0/1 pada slot 0 router 2911. Bootstrap mengambil modul dari sampel lokal jika diperlukan; jika tidak ditemukan, build berhenti dengan pesan yang jelas.
-- PC/server: `ip: 192.168.10.10/24`, `gateway: 192.168.10.1`. Jika IP tidak ditentukan, NIC tidak diberi alamat; agent sebaiknya mengisi alamat sesuai kebutuhan pengguna.
+- Subinterface 802.1Q: `subinterfaces: {Gi0/1.10: 192.168.20.1/24, Gi0/1.20: {ip: 192.168.30.1/24, native: true}}`. Hanya router dan port Ethernet; nomor VLAN diambil dari angka setelah titik. Maksimum satu subinterface `native` per parent. Parent otomatis mendapat `no shutdown`. Ini routing antar-VLAN; port switch di sisi lain tetap harus trunk yang membawa VLAN terkait. Jalur antar-VLAN belum diprediksi oleh audit.
+- PC/server: `ip: 192.168.10.10/24`, `gateway: 192.168.10.1`, dan `dns: 192.168.10.53` untuk resolver. Jika IP tidak ditentukan, NIC tidak diberi alamat; agent sebaiknya mengisi alamat sesuai kebutuhan pengguna. Server menerima `services: {http: true, https: true, dns: {srv.lab: 192.168.10.10}}`. HTTP/HTTPS aktif secara default; DNS hanya aktif bila record A diisi. Layanan lain tidak diwarisi dari template donor.
 - Switch: `vlans: {10: DATA}` dan `ports: {Fa0/1: {mode: access, vlan: 10}}`. Port Fa0/1–Fa0/24 serta Gi0/1–Gi0/2. Trunk memakai `{mode: trunk, allowed_vlans: [10, 20], native_vlan: 1}`. VLAN selain 1 harus didefinisikan. Trunk hanya membawa VLAN yang disebut.
 - Link ringkas: `[R1:Gi0/0, SW1:Gi0/1]`; bentuk lengkap: `{from: R1:Gi0/0, to: SW1:Gi0/1, cable: straight}`. Kabel otomatis cross untuk switch–switch atau pasangan endpoint non-switch, straight untuk switch–endpoint. Nama port panjang juga diterima.
 
@@ -166,6 +167,37 @@ config:
 ```
 
 OSPF mengonversi CIDR menjadi wildcard mask. Next hop statis harus berada di subnet interface router. DHCP MVP hanya pool lokal dengan gateway pada interface router; gateway dan seluruh alamat statis dalam spec otomatis dikecualikan. `excluded` berisi alamat individual, bukan rentang. Klien DHCP harus diaktifkan manual di PT; tidak ada DHCP relay otomatis.
+
+Contoh subinterface 802.1Q pada router:
+
+```yaml
+- id: R1
+  type: router
+  interfaces: {Gi0/0: 10.0.0.1/30}
+  subinterfaces:
+    Gi0/1.10: 192.168.10.1/24
+    Gi0/1.20: {ip: 192.168.20.1/24, native: true}
+```
+
+Build menghasilkan `encapsulation dot1Q 10`/`20` sebelum `ip address`, menambahkan `native` bila diminta, dan `no shutdown` pada parent. Audit memeriksa IP, VLAN, flag native dan shutdown; kesalahan menghasilkan status `failed`. Status jalur tetap `unknown` karena forwarding antar-VLAN tidak disimulasikan.
+
+Contoh server dengan layanan eksplisit:
+
+```yaml
+- id: SRV1
+  type: server
+  ip: 192.168.20.11/24
+  gateway: 192.168.20.1
+  dns: 192.168.20.11
+  services:
+    http: true
+    https: true
+    dns:
+      srv1.lab: 192.168.20.11
+      intranet.lab: 192.168.20.12
+```
+
+Build menyalakan `HTTP_SERVER`/`HTTPS_SERVER`, menulis record `A-REC` ke `NAMESERVER-DATABASE`, dan mengisi DNS resolver pada NIC host. PC dapat membuka `http://192.168.20.11` atau `http://srv1.lab` bila rutenya tersedia. Audit memeriksa status HTTP/HTTPS/DNS dan record A; DNS TTL memakai 86400. Pengaktifan layanan diverifikasi pada XML dan audit, bukan dengan membuka browser di PT; uji GUI tetap diperlukan. Layanan email/FTP/TFTP/AAA dan record CNAME/AAAA/NS/SOA belum didukung.
 
 ## Contoh
 
@@ -191,7 +223,7 @@ Sintaks CLI mengikuti [Cisco BGP Configuration Guide](https://www.cisco.com/c/en
 ### Preset lain
 
 - `examples/lan.yaml`: 1 router, 1 switch, 2 PC, satu subnet.
-- `examples/vlan.yaml`: 2 switch, VLAN 10/20, trunk, 3 PC dan 1 server. VLAN berbeda terisolasi; tidak ada routing antar-VLAN. Server dipakai sebagai endpoint IP, layanan aplikasi dinonaktifkan.
+- `examples/vlan.yaml`: 2 switch, VLAN 10/20, trunk, 3 PC dan 1 server. VLAN berbeda terisolasi; tidak ada routing antar-VLAN. Server dipakai sebagai endpoint IP dengan HTTP/HTTPS aktif; DNS opsional lewat `services`.
 - `examples/ospf.yaml`: 2 router, 2 switch, 4 PC, dua LAN dan transit /30.
 
 Repository menyediakan empat spesifikasi YAML. File `.pkt` dibuat lokal saat build; XML, cache dan contoh biner tidak didistribusikan dalam paket publik.
@@ -236,7 +268,7 @@ Bootstrap diuji memakai contoh bawaan instalasi **9.0.0**. Sampel dapat berasal 
 
 Validasi mencakup XML well-formed, model/port, nama/ID, IP ganda, gateway, VLAN, link yatim, port ganda, field asing, integritas codec dan round-trip. Validasi ini tidak membuktikan konektivitas, route convergence, atau penerapan konfigurasi oleh PT. Lihat `ACCEPTANCE.md` untuk hasil terukur dan pekerjaan yang tersisa.
 
-NAT, impor/modifikasi otomatis sembarang `.pkt`, IPv6, subinterface/SVI, wireless/IoT/ASA, layanan server dan `.pka` belum tersedia. Untuk mengedit lab hasil skill, ubah YAML atau `topology.json`, lalu bangun ulang. Decode file lain dapat digunakan untuk inspeksi; encoder hanya menerima model MVP. Tidak ada fallback JavaScript yang diklaim bekerja tanpa uji API PT.
+NAT, impor/modifikasi otomatis sembarang `.pkt`, IPv6, SVI pada switch, wireless/IoT/ASA, layanan server selain HTTP/HTTPS dan DNS A-record, dan `.pka` belum tersedia. Subinterface 802.1Q hanya untuk router 2911; SVI switch, NAT dan IPv6 tetap di luar cakupan. Untuk mengedit lab hasil skill, ubah YAML atau `topology.json`, lalu bangun ulang. Decode file lain dapat digunakan untuk inspeksi; encoder hanya menerima model MVP. Tidak ada fallback JavaScript yang diklaim bekerja tanpa uji API PT.
 
 ## Asal kode dan lisensi
 

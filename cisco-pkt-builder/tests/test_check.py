@@ -1,3 +1,4 @@
+import copy
 import json
 from pathlib import Path
 import subprocess
@@ -70,6 +71,34 @@ class OfflineCheckTests(unittest.TestCase):
         report = audit(s, xml, configs)
         self.assertEqual(report["status"], "partial")
         self.assertTrue(all(p["status"] == "unknown" for p in report["paths"]))
+
+    def test_subinterface_audit_and_cli_mismatch(self):
+        spec = load_spec(ROOT / "examples/lan.yaml")
+        r1 = next(d for d in spec["devices"] if d["id"] == "R1")
+        r1["subinterfaces"] = {"Gi0/1.10": "192.168.20.1/24"}
+        s, xml, configs = build(spec)
+        report = audit(s, xml, configs)
+        self.assertEqual(report["status"], "partial")
+        self.assertTrue(any("subinterface" in w for w in report["warnings"]))
+        self.assertTrue(all(p["status"] == "unknown" for p in report["paths"]))
+        broken = audit(s, xml.replace(b"encapsulation dot1Q 10", b"encapsulation dot1Q 11"), configs)
+        self.assertEqual(broken["status"], "failed")
+        self.assertTrue(any("encapsulation dot1Q" in e for e in broken["errors"]))
+
+    def test_server_services_and_host_dns_audit(self):
+        s, xml, configs = build(load_spec(ROOT / "examples/vlan.yaml"))
+        self.assertEqual(audit(s, xml, configs)["status"], "partial")
+        changed = copy.deepcopy(s)
+        server = next(d for d in changed["devices"] if d["type"] == "server")
+        server["services"]["dns"] = {"srv1.lab": "192.168.20.11"}
+        report = audit(changed, xml, configs)
+        self.assertEqual(report["status"], "failed")
+        self.assertTrue(any("record DNS" in e for e in report["errors"]))
+        changed = copy.deepcopy(s)
+        next(d for d in changed["devices"] if d["id"] == "PC2")["dns"] = "192.168.20.11"
+        report = audit(changed, xml, configs)
+        self.assertEqual(report["status"], "failed")
+        self.assertTrue(any("DNS host" in e for e in report["errors"]))
 
     def test_repeated_as_does_not_assume_bgp_transit(self):
         spec = load_spec(ROOT / "examples/bgp.yaml")

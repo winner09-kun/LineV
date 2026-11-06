@@ -23,7 +23,12 @@ bersifat privat, sehingga jangan otomatis memublikasikan laporan.
 - Power perangkat mati, interface berkabel dengan `shutdown`, perangkat tanpa kabel terpetakan.
 - Endpoint kabel ambigu, referensi perangkat ganda, port berkabel berulang.
 - Subnet berbeda pada link langsung dengan alamat kedua interface yang dikenali.
+- Subinterface 802.1Q ber-IP tanpa `encapsulation dot1Q`, atau nomor VLAN pada nama subinterface berbeda dari encapsulation.
 - Running/startup config berbeda dan kemungkinan `remote-as` BGP berbeda dari ASN peer yang berhasil dipetakan.
+
+Status layanan server (HTTP/HTTPS/DNS) tidak dinilai oleh `analisa`; layanan yang
+dimatikan bisa disengaja dan bukan bukti kesalahan. Periksa tab Services di PT bila
+browser gagal membuka halaman.
 
 Model yang telah dipakai dalam pengujian: 2911, 2960-24TT, PC-PT, Server-PT.
 Model/struktur lain dibaca sebatas field yang dikenali dan ditandai belum diuji;

@@ -1,0 +1,450 @@
+{
+  "communities": {
+    "0": [
+      "argparse",
+      "cisco_pkt_builder_scripts_analyze_pkt",
+      "cisco_pkt_builder_scripts_analyze_pkt_main",
+      "cisco_pkt_builder_scripts_analyze_pkt_rationale_1",
+      "cisco_pkt_builder_scripts_bootstrap",
+      "cisco_pkt_builder_scripts_bootstrap_cached",
+      "cisco_pkt_builder_scripts_bootstrap_installation",
+      "cisco_pkt_builder_scripts_bootstrap_main",
+      "cisco_pkt_builder_scripts_bootstrap_prepare",
+      "cisco_pkt_builder_scripts_bootstrap_rationale_1",
+      "cisco_pkt_builder_scripts_build_topology_main",
+      "cisco_pkt_builder_scripts_check_topology",
+      "cisco_pkt_builder_scripts_check_topology_main",
+      "cisco_pkt_builder_scripts_check_topology_rationale_1",
+      "cisco_pkt_builder_scripts_common",
+      "cisco_pkt_builder_scripts_common_local_path",
+      "cisco_pkt_builder_scripts_common_rationale_1",
+      "cisco_pkt_builder_scripts_common_write_new",
+      "cisco_pkt_builder_scripts_pkt",
+      "cisco_pkt_builder_scripts_pkt_codec",
+      "cisco_pkt_builder_scripts_pkt_codec_main",
+      "cisco_pkt_builder_scripts_pkt_codec_rationale_1",
+      "cisco_pkt_builder_scripts_pkt_command_args",
+      "cisco_pkt_builder_scripts_pkt_main",
+      "cisco_pkt_builder_scripts_pkt_next_output",
+      "cisco_pkt_builder_scripts_pkt_parser",
+      "cisco_pkt_builder_scripts_pkt_rationale_1",
+      "cisco_pkt_builder_scripts_validate_main",
+      "cisco_pkt_builder_tests_test_builder_buildertests_test_bootstrap_cache_integrity",
+      "cisco_pkt_builder_tests_test_builder_buildertests_test_paths_and_no_overwrite",
+      "collections",
+      "hashlib",
+      "json",
+      "os",
+      "pkt_core_errors",
+      "time"
+    ],
+    "1": [
+      "cisco_pkt_builder_scripts_bootstrap_compatible_seed",
+      "cisco_pkt_builder_scripts_bootstrap_rationale_18",
+      "cisco_pkt_builder_scripts_build_topology_build",
+      "cisco_pkt_builder_scripts_build_topology_clean_seed",
+      "cisco_pkt_builder_scripts_build_topology_rationale_15",
+      "cisco_pkt_builder_scripts_common_load_spec",
+      "cisco_pkt_builder_scripts_common_load_spec_mapping",
+      "cisco_pkt_builder_scripts_validate_validate_xml",
+      "cisco_pkt_builder_tests_test_builder_buildertests",
+      "cisco_pkt_builder_tests_test_builder_buildertests_setup",
+      "cisco_pkt_builder_tests_test_builder_buildertests_test_bgp_invalid_peer_and_network",
+      "cisco_pkt_builder_tests_test_builder_buildertests_test_bgp_serial_config_and_hardware",
+      "cisco_pkt_builder_tests_test_builder_buildertests_test_clean_seed_keeps_default_scenario_without_donor_pdus",
+      "cisco_pkt_builder_tests_test_builder_buildertests_test_clean_seed_preserves_physical_identity",
+      "cisco_pkt_builder_tests_test_builder_buildertests_test_clean_seed_preserves_script_loader_record",
+      "cisco_pkt_builder_tests_test_builder_buildertests_test_cli_and_gateway",
+      "cisco_pkt_builder_tests_test_builder_buildertests_test_deterministic",
+      "cisco_pkt_builder_tests_test_builder_buildertests_test_duplicate_device_memory_rejected",
+      "cisco_pkt_builder_tests_test_builder_buildertests_test_empty_scenario_rejected",
+      "cisco_pkt_builder_tests_test_builder_buildertests_test_empty_script_loader_rejected",
+      "cisco_pkt_builder_tests_test_builder_buildertests_test_mismatched_cable_memory_rejected",
+      "cisco_pkt_builder_tests_test_builder_buildertests_test_normalized_spec_rebuild",
+      "cisco_pkt_builder_tests_test_builder_buildertests_test_ospf_wildcards",
+      "cisco_pkt_builder_tests_test_builder_buildertests_test_preset_and_spec_conflict",
+      "cisco_pkt_builder_tests_test_builder_buildertests_test_preset_report_matches_spec",
+      "cisco_pkt_builder_tests_test_builder_buildertests_test_seed_reference_schema_not_version",
+      "cisco_pkt_builder_tests_test_builder_buildertests_test_serial_clock_and_cable_rejected",
+      "cisco_pkt_builder_tests_test_builder_buildertests_test_serial_dce_to_and_xml_rejection",
+      "cisco_pkt_builder_tests_test_builder_buildertests_test_serial_requires_module",
+      "cisco_pkt_builder_tests_test_builder_buildertests_test_static_and_dhcp",
+      "cisco_pkt_builder_tests_test_builder_buildertests_test_tamper",
+      "cisco_pkt_builder_tests_test_builder_buildertests_test_three_examples_roundtrip",
+      "cisco_pkt_builder_tests_test_builder_buildertests_test_vlan_and_crossover",
+      "cisco_pkt_builder_tests_test_builder_buildertests_test_xml_duplicate_ip",
+      "cisco_pkt_builder_tests_test_builder_buildertests_test_yaml_duplicate_key",
+      "cisco_pkt_builder_tests_test_check_offlinechecktests_setupclass"
+    ],
+    "2": [
+      "ast",
+      "cisco_pkt_builder_scripts_package_release",
+      "cisco_pkt_builder_scripts_package_release_main",
+      "cisco_pkt_builder_scripts_package_release_rationale_1",
+      "cisco_pkt_builder_scripts_package_release_release_files",
+      "cisco_pkt_builder_scripts_verify_install",
+      "cisco_pkt_builder_scripts_verify_install_main",
+      "cisco_pkt_builder_scripts_verify_install_rationale_1",
+      "cisco_pkt_builder_scripts_verify_install_run_checks",
+      "cisco_pkt_builder_scripts_verify_install_run_checks_check",
+      "cisco_pkt_builder_scripts_verify_install_run_checks_command",
+      "cisco_pkt_builder_tests_test_analyze",
+      "cisco_pkt_builder_tests_test_builder",
+      "cisco_pkt_builder_tests_test_check",
+      "cisco_pkt_builder_tests_test_commands",
+      "cisco_pkt_builder_tests_test_install",
+      "cisco_pkt_builder_tests_test_install_installtests",
+      "cisco_pkt_builder_tests_test_install_installtests_setup",
+      "cisco_pkt_builder_tests_test_install_installtests_test_existing_output_preserved",
+      "cisco_pkt_builder_tests_test_install_installtests_test_release_without_site_packages_or_cache",
+      "cisco_pkt_builder_tests_test_install_installtests_test_unsafe_archive_rejected",
+      "contextlib",
+      "io",
+      "pathlib",
+      "pkt_core",
+      "platform",
+      "shutil",
+      "subprocess",
+      "sys",
+      "tempfile",
+      "unittest",
+      "unittest_mock",
+      "zipfile"
+    ],
+    "3": [
+      "cisco_pkt_builder_scripts_build_topology",
+      "cisco_pkt_builder_scripts_build_topology_clean_model",
+      "cisco_pkt_builder_scripts_build_topology_device_addresses",
+      "cisco_pkt_builder_scripts_build_topology_ios_config",
+      "cisco_pkt_builder_scripts_build_topology_rationale_1",
+      "cisco_pkt_builder_scripts_build_topology_rationale_124",
+      "cisco_pkt_builder_scripts_build_topology_set_text",
+      "cisco_pkt_builder_scripts_build_topology_summary",
+      "cisco_pkt_builder_scripts_check_topology_parse_cli",
+      "cisco_pkt_builder_scripts_validate",
+      "cisco_pkt_builder_scripts_validate_address",
+      "cisco_pkt_builder_scripts_validate_keys",
+      "cisco_pkt_builder_scripts_validate_normalize",
+      "cisco_pkt_builder_scripts_validate_port_name",
+      "cisco_pkt_builder_scripts_validate_ports",
+      "cisco_pkt_builder_scripts_validate_rationale_1",
+      "cisco_pkt_builder_scripts_validate_require",
+      "cisco_pkt_builder_scripts_validate_token",
+      "cisco_pkt_builder_scripts_validate_vlan",
+      "cisco_pkt_builder_tests_test_builder_buildertests_test_duplicate_ip",
+      "cisco_pkt_builder_tests_test_builder_buildertests_test_duplicate_port_alias",
+      "cisco_pkt_builder_tests_test_builder_buildertests_test_gateway",
+      "cisco_pkt_builder_tests_test_builder_buildertests_test_nonexistent_port",
+      "cisco_pkt_builder_tests_test_builder_buildertests_test_orphan",
+      "cisco_pkt_builder_tests_test_builder_buildertests_test_unknown_feature",
+      "copy",
+      "ipaddress",
+      "lab_api",
+      "math",
+      "re",
+      "xml_etree_elementtree"
+    ],
+    "4": [
+      "cisco_pkt_builder_examples_bgp",
+      "cisco_pkt_builder_examples_bgp_bgp_asn",
+      "cisco_pkt_builder_examples_bgp_bgp_neighbors",
+      "cisco_pkt_builder_examples_bgp_bgp_networks",
+      "cisco_pkt_builder_examples_bgp_config_bgp",
+      "cisco_pkt_builder_examples_bgp_devices",
+      "cisco_pkt_builder_examples_bgp_devices_config",
+      "cisco_pkt_builder_examples_bgp_devices_gateway",
+      "cisco_pkt_builder_examples_bgp_devices_id",
+      "cisco_pkt_builder_examples_bgp_devices_interfaces",
+      "cisco_pkt_builder_examples_bgp_devices_ip",
+      "cisco_pkt_builder_examples_bgp_devices_module",
+      "cisco_pkt_builder_examples_bgp_devices_position",
+      "cisco_pkt_builder_examples_bgp_devices_type",
+      "cisco_pkt_builder_examples_bgp_interfaces_gi0_0",
+      "cisco_pkt_builder_examples_bgp_interfaces_se0_0_0",
+      "cisco_pkt_builder_examples_bgp_interfaces_se0_0_1",
+      "cisco_pkt_builder_examples_bgp_links",
+      "cisco_pkt_builder_examples_bgp_links_cable",
+      "cisco_pkt_builder_examples_bgp_links_clock_rate",
+      "cisco_pkt_builder_examples_bgp_links_dce",
+      "cisco_pkt_builder_examples_bgp_links_from",
+      "cisco_pkt_builder_examples_bgp_links_to",
+      "cisco_pkt_builder_examples_bgp_name",
+      "cisco_pkt_builder_examples_bgp_neighbors_ip",
+      "cisco_pkt_builder_examples_bgp_neighbors_remote_as"
+    ],
+    "5": [
+      "cisco_pkt_builder_examples_vlan",
+      "cisco_pkt_builder_examples_vlan_devices",
+      "cisco_pkt_builder_examples_vlan_devices_id",
+      "cisco_pkt_builder_examples_vlan_devices_ip",
+      "cisco_pkt_builder_examples_vlan_devices_ports",
+      "cisco_pkt_builder_examples_vlan_devices_position",
+      "cisco_pkt_builder_examples_vlan_devices_type",
+      "cisco_pkt_builder_examples_vlan_devices_vlans",
+      "cisco_pkt_builder_examples_vlan_fa0_1_mode",
+      "cisco_pkt_builder_examples_vlan_fa0_1_vlan",
+      "cisco_pkt_builder_examples_vlan_fa0_2_mode",
+      "cisco_pkt_builder_examples_vlan_fa0_2_vlan",
+      "cisco_pkt_builder_examples_vlan_gi0_1_allowed_vlans",
+      "cisco_pkt_builder_examples_vlan_gi0_1_mode",
+      "cisco_pkt_builder_examples_vlan_links",
+      "cisco_pkt_builder_examples_vlan_name",
+      "cisco_pkt_builder_examples_vlan_ports_fa0_1",
+      "cisco_pkt_builder_examples_vlan_ports_fa0_2",
+      "cisco_pkt_builder_examples_vlan_ports_gi0_1",
+      "cisco_pkt_builder_examples_vlan_vlans_10",
+      "cisco_pkt_builder_examples_vlan_vlans_20"
+    ],
+    "6": [
+      "cisco_pkt_builder_scripts_check_topology_audit",
+      "cisco_pkt_builder_scripts_check_topology_audit_check",
+      "cisco_pkt_builder_scripts_check_topology_predict_paths",
+      "cisco_pkt_builder_scripts_check_topology_predict_paths_access",
+      "cisco_pkt_builder_scripts_check_topology_predict_paths_gateway",
+      "cisco_pkt_builder_scripts_check_topology_rationale_61",
+      "cisco_pkt_builder_scripts_check_topology_reachable",
+      "cisco_pkt_builder_tests_test_check_offlinechecktests",
+      "cisco_pkt_builder_tests_test_check_offlinechecktests_test_bad_host_gateway",
+      "cisco_pkt_builder_tests_test_check_offlinechecktests_test_bgp_paths_are_predictions_not_runtime_proof",
+      "cisco_pkt_builder_tests_test_check_offlinechecktests_test_disconnected_host_not_predicted_reachable",
+      "cisco_pkt_builder_tests_test_check_offlinechecktests_test_dispatch_reads_pkt_not_stale_xml_and_is_read_only",
+      "cisco_pkt_builder_tests_test_check_offlinechecktests_test_fallback_config_divergence",
+      "cisco_pkt_builder_tests_test_check_offlinechecktests_test_repeated_as_does_not_assume_bgp_transit",
+      "cisco_pkt_builder_tests_test_check_offlinechecktests_test_serial_hardware_clock_mismatch",
+      "cisco_pkt_builder_tests_test_check_offlinechecktests_test_unsupported_cli_not_reported_reachable",
+      "cisco_pkt_builder_tests_test_check_offlinechecktests_test_vlan_is_unknown",
+      "cisco_pkt_builder_tests_test_check_offlinechecktests_test_wrong_bgp_and_shutdown_even_when_both_cli_copies_match",
+      "itertools"
+    ],
+    "7": [
+      "cisco_pkt_builder_examples_ospf",
+      "cisco_pkt_builder_examples_ospf_config_ospf",
+      "cisco_pkt_builder_examples_ospf_devices",
+      "cisco_pkt_builder_examples_ospf_devices_config",
+      "cisco_pkt_builder_examples_ospf_devices_gateway",
+      "cisco_pkt_builder_examples_ospf_devices_id",
+      "cisco_pkt_builder_examples_ospf_devices_interfaces",
+      "cisco_pkt_builder_examples_ospf_devices_ip",
+      "cisco_pkt_builder_examples_ospf_devices_position",
+      "cisco_pkt_builder_examples_ospf_devices_type",
+      "cisco_pkt_builder_examples_ospf_interfaces_gi0_0",
+      "cisco_pkt_builder_examples_ospf_interfaces_gi0_1",
+      "cisco_pkt_builder_examples_ospf_links",
+      "cisco_pkt_builder_examples_ospf_name",
+      "cisco_pkt_builder_examples_ospf_ospf_area",
+      "cisco_pkt_builder_examples_ospf_ospf_networks",
+      "cisco_pkt_builder_examples_ospf_ospf_process"
+    ],
+    "8": [
+      "cisco_pkt_builder_scripts_analyze_pkt_analyze_file",
+      "cisco_pkt_builder_scripts_analyze_pkt_analyze_xml",
+      "cisco_pkt_builder_scripts_analyze_pkt_analyze_xml_address",
+      "cisco_pkt_builder_scripts_analyze_pkt_analyze_xml_finding",
+      "cisco_pkt_builder_scripts_analyze_pkt_port_name",
+      "cisco_pkt_builder_tests_test_analyze_analyzetests",
+      "cisco_pkt_builder_tests_test_analyze_analyzetests_codes",
+      "cisco_pkt_builder_tests_test_analyze_analyzetests_test_duplicate_invalid_and_reserved_ips",
+      "cisco_pkt_builder_tests_test_analyze_analyzetests_test_host_gateway_and_dhcp_limit",
+      "cisco_pkt_builder_tests_test_analyze_analyzetests_test_no_findings_does_not_claim_runtime",
+      "cisco_pkt_builder_tests_test_analyze_analyzetests_test_shutdown_subnet_and_as_evidence",
+      "cisco_pkt_builder_tests_test_analyze_analyzetests_test_standalone_cli_readonly_and_report_no_overwrite",
+      "cisco_pkt_builder_tests_test_analyze_analyzetests_test_unknown_model_missing_cli_and_ambiguous_ref",
+      "cisco_pkt_builder_tests_test_analyze_analyzetests_test_unknown_schema_and_missing_engine",
+      "cisco_pkt_builder_tests_test_analyze_fixture"
+    ],
+    "9": [
+      "cisco_pkt_builder_examples_lan",
+      "cisco_pkt_builder_examples_lan_devices",
+      "cisco_pkt_builder_examples_lan_devices_gateway",
+      "cisco_pkt_builder_examples_lan_devices_id",
+      "cisco_pkt_builder_examples_lan_devices_interfaces",
+      "cisco_pkt_builder_examples_lan_devices_ip",
+      "cisco_pkt_builder_examples_lan_devices_position",
+      "cisco_pkt_builder_examples_lan_devices_type",
+      "cisco_pkt_builder_examples_lan_interfaces_gi0_0",
+      "cisco_pkt_builder_examples_lan_links",
+      "cisco_pkt_builder_examples_lan_name"
+    ],
+    "10": [
+      "cisco_pkt_builder_tests_test_commands_commandtests",
+      "cisco_pkt_builder_tests_test_commands_commandtests_setup",
+      "cisco_pkt_builder_tests_test_commands_commandtests_test_arguments_are_not_shell_code",
+      "cisco_pkt_builder_tests_test_commands_commandtests_test_child_preserves_isolation_and_uses_utf8",
+      "cisco_pkt_builder_tests_test_commands_commandtests_test_decode_mapping_and_path_guard",
+      "cisco_pkt_builder_tests_test_commands_commandtests_test_existing_output_gets_new_name",
+      "cisco_pkt_builder_tests_test_commands_commandtests_test_help_does_not_execute",
+      "cisco_pkt_builder_tests_test_commands_commandtests_test_presets_preserve_options",
+      "cisco_pkt_builder_tests_test_commands_commandtests_test_unknown_command_has_no_side_effect",
+      "cisco_pkt_builder_tests_test_commands_commandtests_test_validate_dispatch_integration"
+    ],
+    "11": [
+      "cisco_pkt_builder_agents_openai",
+      "cisco_pkt_builder_agents_openai_interface",
+      "cisco_pkt_builder_agents_openai_interface_default_prompt",
+      "cisco_pkt_builder_agents_openai_interface_display_name",
+      "cisco_pkt_builder_agents_openai_interface_short_description",
+      "cisco_pkt_builder_agents_openai_policy",
+      "cisco_pkt_builder_agents_openai_policy_allow_implicit_invocation"
+    ]
+  },
+  "cohesion": {
+    "0": 0.14126984126984127,
+    "1": 0.11428571428571428,
+    "2": 0.12878787878787878,
+    "3": 0.12903225806451613,
+    "4": 0.07692307692307693,
+    "5": 0.09523809523809523,
+    "6": 0.16374269005847952,
+    "7": 0.11764705882352941,
+    "8": 0.2857142857142857,
+    "9": 0.18181818181818182,
+    "10": 0.2,
+    "11": 0.2857142857142857
+  },
+  "gods": [
+    {
+      "id": "cisco_pkt_builder_tests_test_builder_buildertests",
+      "label": "BuilderTests",
+      "degree": 35
+    },
+    {
+      "id": "cisco_pkt_builder_scripts_build_topology_build",
+      "label": "build()",
+      "degree": 31
+    },
+    {
+      "id": "cisco_pkt_builder_scripts_validate_normalize",
+      "label": "normalize()",
+      "degree": 29
+    },
+    {
+      "id": "cisco_pkt_builder_scripts_common_load_spec",
+      "label": "load_spec()",
+      "degree": 23
+    },
+    {
+      "id": "cisco_pkt_builder_scripts_validate_validate_xml",
+      "label": "validate_xml()",
+      "degree": 21
+    },
+    {
+      "id": "cisco_pkt_builder_scripts_common_local_path",
+      "label": "local_path()",
+      "degree": 19
+    },
+    {
+      "id": "cisco_pkt_builder_scripts_check_topology_audit",
+      "label": "audit()",
+      "degree": 19
+    },
+    {
+      "id": "cisco_pkt_builder_scripts_bootstrap_prepare",
+      "label": "prepare()",
+      "degree": 15
+    },
+    {
+      "id": "cisco_pkt_builder_scripts_verify_install_run_checks",
+      "label": "run_checks()",
+      "degree": 13
+    },
+    {
+      "id": "cisco_pkt_builder_scripts_analyze_pkt_analyze_xml",
+      "label": "analyze_xml()",
+      "degree": 13
+    }
+  ],
+  "surprises": [
+    {
+      "source": "build()",
+      "target": "prepare()",
+      "source_files": [
+        "cisco-pkt-builder/scripts/build_topology.py",
+        "cisco-pkt-builder/scripts/bootstrap.py"
+      ],
+      "confidence": "EXTRACTED",
+      "relation": "calls",
+      "why": "bridges separate communities"
+    },
+    {
+      "source": "main()",
+      "target": "audit()",
+      "source_files": [
+        "cisco-pkt-builder/scripts/build_topology.py",
+        "cisco-pkt-builder/scripts/check_topology.py"
+      ],
+      "confidence": "EXTRACTED",
+      "relation": "calls",
+      "why": "bridges separate communities"
+    },
+    {
+      "source": "main()",
+      "target": "load_spec()",
+      "source_files": [
+        "cisco-pkt-builder/scripts/build_topology.py",
+        "cisco-pkt-builder/scripts/common.py"
+      ],
+      "confidence": "EXTRACTED",
+      "relation": "calls",
+      "why": "bridges separate communities"
+    },
+    {
+      "source": "main()",
+      "target": "normalize()",
+      "source_files": [
+        "cisco-pkt-builder/scripts/build_topology.py",
+        "cisco-pkt-builder/scripts/validate.py"
+      ],
+      "confidence": "EXTRACTED",
+      "relation": "calls",
+      "why": "bridges separate communities"
+    },
+    {
+      "source": "main()",
+      "target": "load_spec()",
+      "source_files": [
+        "cisco-pkt-builder/scripts/check_topology.py",
+        "cisco-pkt-builder/scripts/common.py"
+      ],
+      "confidence": "EXTRACTED",
+      "relation": "calls",
+      "why": "bridges separate communities"
+    }
+  ],
+  "questions": [
+    {
+      "type": "bridge_node",
+      "question": "Why does `CommandTests` connect `CommandTests` to `verify_install.py`?",
+      "why": "High betweenness centrality (0.046) - this node is a cross-community bridge."
+    },
+    {
+      "type": "verify_inferred",
+      "question": "Are the 19 inferred relationships involving `build()` (e.g. with `.test_bgp_serial_config_and_hardware()` and `.test_cli_and_gateway()`) actually correct?",
+      "why": "`build()` has 19 INFERRED edges - model-reasoned connections that need verification."
+    },
+    {
+      "type": "low_cohesion",
+      "question": "Should `check_topology.py` be split into smaller, more focused modules?",
+      "why": "Cohesion score 0.14126984126984127 - nodes in this community are weakly interconnected."
+    },
+    {
+      "type": "bridge_node",
+      "question": "Why does `BuilderTests` connect `BuilderTests` to `check_topology.py`, `verify_install.py`, `build_topology.py`?",
+      "why": "High betweenness centrality (0.045) - this node is a cross-community bridge."
+    },
+    {
+      "type": "verify_inferred",
+      "question": "Are the 11 inferred relationships involving `normalize()` (e.g. with `.test_bgp_invalid_peer_and_network()` and `.test_duplicate_ip()`) actually correct?",
+      "why": "`normalize()` has 11 INFERRED edges - model-reasoned connections that need verification."
+    },
+    {
+      "type": "low_cohesion",
+      "question": "Should `BuilderTests` be split into smaller, more focused modules?",
+      "why": "Cohesion score 0.11428571428571428 - nodes in this community are weakly interconnected."
+    },
+    {
+      "type": "bridge_node",
+      "question": "Why does `normalize()` connect `build_topology.py` to `check_topology.py`, `BuilderTests`, `audit`?",
+      "why": "High betweenness centrality (0.042) - this node is a cross-community bridge."
+    }
+  ]
+}

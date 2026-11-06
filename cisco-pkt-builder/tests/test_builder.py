@@ -12,7 +12,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts"))
 from common import load_spec, local_path, write_new
 from validate import normalize, validate_xml
-from build_topology import build
+from build_topology import build, summary
 from pkt_core import encode_bytes, decode_bytes
 from pkt_core.errors import PacketTracerError
 
@@ -197,6 +197,115 @@ class BuilderTests(unittest.TestCase):
         _, xml, configs = build(load_spec(ROOT / "examples/vlan.yaml"))
         self.assertIn(" switchport trunk allowed vlan 10,20", configs["SW1"])
         self.assertIn(b"eCrossOver", xml)
+
+    def test_router_subinterface_8021q(self):
+        spec = load_spec(ROOT / "examples/lan.yaml")
+        r1 = next(d for d in spec["devices"] if d["id"] == "R1")
+        r1["subinterfaces"] = {
+            "Gi0/1.10": "192.168.20.1/24",
+            "Gi0/1.20": {"ip": "192.168.30.1/24", "native": True},
+        }
+        s, xml, configs = build(spec)
+        validate_xml(xml)
+        self.assertIn("interface GigabitEthernet0/1\n no shutdown\n exit", configs["R1"])
+        self.assertIn("interface GigabitEthernet0/1.10\n encapsulation dot1Q 10\n"
+                      " ip address 192.168.20.1 255.255.255.0\n no shutdown\n exit", configs["R1"])
+        self.assertIn(" encapsulation dot1Q 20 native", configs["R1"])
+        self.assertEqual(s["devices"][0]["subinterfaces"]["GigabitEthernet0/1.10"],
+                         {"ip": "192.168.20.1/24", "vlan": 10, "native": False})
+        self.assertIn("## Subinterface 802.1Q", summary(s))
+
+    def test_subinterface_validation(self):
+        def router_spec(subs):
+            spec = load_spec(ROOT / "examples/lan.yaml")
+            spec["devices"][0]["subinterfaces"] = subs
+            return spec
+
+        with self.assertRaisesRegex(ValueError, "hanya untuk router"):
+            spec = load_spec(ROOT / "examples/lan.yaml")
+            spec["devices"][2]["subinterfaces"] = {"Fa0.10": "192.168.20.1/24"}
+            normalize(spec)
+        with self.assertRaisesRegex(ValueError, "VLAN subinterface"):
+            normalize(router_spec({"Gi0/1.5000": "192.168.20.1/24"}))
+        with self.assertRaisesRegex(ValueError, "parent subinterface"):
+            normalize(router_spec({"Gi0/9.10": "192.168.20.1/24"}))
+        with self.assertRaisesRegex(ValueError, "port Ethernet"):
+            normalize(router_spec({"Se0/0/0.10": "192.168.20.1/24"}))
+        with self.assertRaisesRegex(ValueError, "satu subinterface native"):
+            normalize(router_spec({
+                "Gi0/1.10": {"ip": "192.168.20.1/24", "native": True},
+                "Gi0/1.20": {"ip": "192.168.30.1/24", "native": True}}))
+        with self.assertRaisesRegex(ValueError, "IP ganda"):
+            normalize(router_spec({"Gi0/1.10": "192.168.10.1/24"}))
+        with self.assertRaisesRegex(ValueError, "tidak cocok"):
+            normalize(router_spec({"Gi0/1.10": {"ip": "192.168.20.1/24", "vlan": 20}}))
+        normalized = normalize(router_spec({"Gi0/1.10": {"ip": "192.168.20.1/24", "vlan": 10}}))
+        self.assertEqual(normalize(normalized), normalized)
+
+    def test_server_services_default_and_custom(self):
+        s, xml, _ = build(load_spec(ROOT / "examples/vlan.yaml"))
+        root = validate_xml(xml)
+        server = next(d for d in root.findall("NETWORK/DEVICES/DEVICE")
+                      if d.findtext("ENGINE/NAME") == "SRV1")
+        self.assertEqual(server.findtext("ENGINE/HTTP_SERVER/ENABLED"), "1")
+        self.assertEqual(server.findtext("ENGINE/HTTPS_SERVER/HTTPSENABLED"), "1")
+        self.assertEqual(server.findtext("ENGINE/DNS_SERVER/ENABLED"), "0")
+        self.assertEqual(list(server.findall("ENGINE/DNS_SERVER/NAMESERVER-DATABASE/RESOURCE-RECORD")), [])
+
+        spec = load_spec(ROOT / "examples/vlan.yaml")
+        srv = next(d for d in spec["devices"] if d["type"] == "server")
+        srv["services"] = {"http": False, "https": False,
+                           "dns": {"srv1.lab": "192.168.20.11", "intranet.lab": "192.168.20.12"}}
+        next(d for d in spec["devices"] if d["id"] == "PC2")["dns"] = "192.168.20.11"
+        s, xml, _ = build(spec)
+        root = validate_xml(xml)
+        server = next(d for d in root.findall("NETWORK/DEVICES/DEVICE")
+                      if d.findtext("ENGINE/NAME") == "SRV1")
+        pc = next(d for d in root.findall("NETWORK/DEVICES/DEVICE")
+                  if d.findtext("ENGINE/NAME") == "PC2")
+        self.assertEqual(server.findtext("ENGINE/HTTP_SERVER/ENABLED"), "0")
+        self.assertEqual(server.findtext("ENGINE/HTTPS_SERVER/HTTPSENABLED"), "0")
+        self.assertEqual(server.findtext("ENGINE/DNS_SERVER/ENABLED"), "1")
+        records = {r.findtext("NAME"): r.findtext("IPADDRESS")
+                   for r in server.findall("ENGINE/DNS_SERVER/NAMESERVER-DATABASE/RESOURCE-RECORD")}
+        self.assertEqual(records, {"srv1.lab": "192.168.20.11", "intranet.lab": "192.168.20.12"})
+        self.assertTrue(all(r.findtext("TYPE") == "A-REC" for r in
+                            server.findall("ENGINE/DNS_SERVER/NAMESERVER-DATABASE/RESOURCE-RECORD")))
+        port = pc.find(".//PORT")
+        self.assertEqual(port.findtext("PORT_DNS"), "192.168.20.11")
+        self.assertEqual(pc.findtext("ENGINE/DNS_CLIENT/SERVER_IP"), "192.168.20.11")
+        self.assertIn("| SRV1 | tidak | tidak | 2 |", summary(s))
+        self.assertEqual(normalize(normalize(spec)), normalize(spec))
+
+    def test_server_services_validation(self):
+        def server_spec(services=None, dns=None):
+            spec = load_spec(ROOT / "examples/vlan.yaml")
+            srv = next(d for d in spec["devices"] if d["type"] == "server")
+            if services is not None:
+                srv["services"] = services
+            if dns is not None:
+                srv["dns"] = dns
+            return spec
+
+        with self.assertRaisesRegex(ValueError, "hanya untuk server"):
+            spec = load_spec(ROOT / "examples/vlan.yaml")
+            spec["devices"][0]["services"] = {}
+            normalize(spec)
+        with self.assertRaisesRegex(ValueError, "http harus boolean"):
+            normalize(server_spec({"http": "yes"}))
+        with self.assertRaisesRegex(ValueError, "nama DNS"):
+            normalize(server_spec({"dns": {"bad name": "192.168.20.11"}}))
+        with self.assertRaisesRegex(ValueError, "IP record"):
+            normalize(server_spec({"dns": {"srv1.lab": "999.1.1.1"}}))
+        with self.assertRaisesRegex(ValueError, "dns memerlukan ip"):
+            spec = load_spec(ROOT / "examples/vlan.yaml")
+            del spec["devices"][2]["ip"]
+            spec["devices"][2]["dns"] = "192.168.20.11"
+            normalize(spec)
+        with self.assertRaisesRegex(ValueError, "dns hanya untuk"):
+            spec = load_spec(ROOT / "examples/lan.yaml")
+            spec["devices"][0]["dns"] = "192.168.10.53"
+            normalize(spec)
 
     def test_ospf_wildcards(self):
         _, _, configs = build(load_spec(ROOT / "examples/ospf.yaml"))

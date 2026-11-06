@@ -1,0 +1,212 @@
+{
+  "cisco-pkt-builder/agents/openai.yaml": {
+    "mtime": 1792983304.7534559,
+    "seen": 1793879808.5564487,
+    "ast_hash": "563a736125f0a02ba39c54ae205ad4d2",
+    "semantic_hash": "563a736125f0a02ba39c54ae205ad4d2"
+  },
+  "cisco-pkt-builder/examples/bgp.yaml": {
+    "mtime": 1793008958.2400403,
+    "seen": 1793879808.5564487,
+    "ast_hash": "69bfd21a77cc962c94b1c9a2d53ac2dc",
+    "semantic_hash": "69bfd21a77cc962c94b1c9a2d53ac2dc"
+  },
+  "cisco-pkt-builder/examples/lan.yaml": {
+    "mtime": 1792901448.2091022,
+    "seen": 1793879808.5564487,
+    "ast_hash": "abd69d79d35a9aa4df26d4226497d4f3",
+    "semantic_hash": "abd69d79d35a9aa4df26d4226497d4f3"
+  },
+  "cisco-pkt-builder/examples/ospf.yaml": {
+    "mtime": 1792901449.1756587,
+    "seen": 1793879808.5564487,
+    "ast_hash": "713395870d3efd3a12a0682f816659e2",
+    "semantic_hash": "713395870d3efd3a12a0682f816659e2"
+  },
+  "cisco-pkt-builder/examples/vlan.yaml": {
+    "mtime": 1792901448.6885233,
+    "seen": 1793879808.5564487,
+    "ast_hash": "f64b3e6e704d3e47d275de84d70330f9",
+    "semantic_hash": "f64b3e6e704d3e47d275de84d70330f9"
+  },
+  "cisco-pkt-builder/scripts/analyze_pkt.py": {
+    "mtime": 1793880798.1812723,
+    "seen": 1793881112.6499877,
+    "ast_hash": "5766f02a3caa7a5fc915c84bcc34bbc7",
+    "semantic_hash": ""
+  },
+  "cisco-pkt-builder/scripts/bootstrap.py": {
+    "mtime": 1793008831.4289453,
+    "seen": 1793879808.5564487,
+    "ast_hash": "65b5475ce76822be6366ee0e62b1fec6",
+    "semantic_hash": "65b5475ce76822be6366ee0e62b1fec6"
+  },
+  "cisco-pkt-builder/scripts/build_topology.py": {
+    "mtime": 1793882229.5410447,
+    "seen": 1793882322.430522,
+    "ast_hash": "742c745a8591c87d01978d685dafa9e9",
+    "semantic_hash": ""
+  },
+  "cisco-pkt-builder/scripts/check_topology.py": {
+    "mtime": 1793882234.0730886,
+    "seen": 1793882322.430522,
+    "ast_hash": "dd86e8fb04cc0896b40fd3c5733a0cf1",
+    "semantic_hash": ""
+  },
+  "cisco-pkt-builder/scripts/common.py": {
+    "mtime": 1792901937.844056,
+    "seen": 1793879808.5564487,
+    "ast_hash": "17c8add66110b65f77fdcb02f2eef656",
+    "semantic_hash": "17c8add66110b65f77fdcb02f2eef656"
+  },
+  "cisco-pkt-builder/scripts/package_release.py": {
+    "mtime": 1792983305.2135231,
+    "seen": 1793879808.5564487,
+    "ast_hash": "692178a7d5a60d1b57fa33447d00ac30",
+    "semantic_hash": "692178a7d5a60d1b57fa33447d00ac30"
+  },
+  "cisco-pkt-builder/scripts/pkt.py": {
+    "mtime": 1793094873.5747252,
+    "seen": 1793879808.5564487,
+    "ast_hash": "7b7602c0b2fbb832fdddc0c297700fb0",
+    "semantic_hash": "7b7602c0b2fbb832fdddc0c297700fb0"
+  },
+  "cisco-pkt-builder/scripts/pkt_codec.py": {
+    "mtime": 1792901401.2832966,
+    "seen": 1793879808.5564487,
+    "ast_hash": "c354e78bb72d9278b6b2707c0010bb34",
+    "semantic_hash": "c354e78bb72d9278b6b2707c0010bb34"
+  },
+  "cisco-pkt-builder/scripts/validate.py": {
+    "mtime": 1793882143.1261432,
+    "seen": 1793882322.430522,
+    "ast_hash": "cec36e8f7e0060422f9db5f8b768519f",
+    "semantic_hash": ""
+  },
+  "cisco-pkt-builder/scripts/verify_install.py": {
+    "mtime": 1793095057.571009,
+    "seen": 1793879808.5564487,
+    "ast_hash": "3ebec88c4376d59480955f779fadd197",
+    "semantic_hash": "3ebec88c4376d59480955f779fadd197"
+  },
+  "cisco-pkt-builder/tests/test_analyze.py": {
+    "mtime": 1793880886.1388123,
+    "seen": 1793881112.6499877,
+    "ast_hash": "77085de79ccb7dd13ccebf7a90ecdd3a",
+    "semantic_hash": ""
+  },
+  "cisco-pkt-builder/tests/test_builder.py": {
+    "mtime": 1793882238.2089634,
+    "seen": 1793882322.430522,
+    "ast_hash": "1bbd86be325c7067b5c64246d6fe2066",
+    "semantic_hash": ""
+  },
+  "cisco-pkt-builder/tests/test_check.py": {
+    "mtime": 1793882131.7901006,
+    "seen": 1793882322.430522,
+    "ast_hash": "db11fbabd4f3fbad4b70a29b385f57e3",
+    "semantic_hash": ""
+  },
+  "cisco-pkt-builder/tests/test_commands.py": {
+    "mtime": 1793880982.8009923,
+    "seen": 1793881112.6499877,
+    "ast_hash": "18ae51c53cdba5ac620b47a25343c912",
+    "semantic_hash": ""
+  },
+  "cisco-pkt-builder/tests/test_install.py": {
+    "mtime": 1793094576.3549888,
+    "seen": 1793879808.5564487,
+    "ast_hash": "a5565c2b3ccfdc6c5a32c37225b8ad2f",
+    "semantic_hash": "a5565c2b3ccfdc6c5a32c37225b8ad2f"
+  },
+  "AGENTS.md": {
+    "mtime": 1793879773.7734723,
+    "seen": 1793881112.6499877,
+    "ast_hash": "f36539ecc9af68f33ebd72770ce4a19e",
+    "semantic_hash": ""
+  },
+  "README.md": {
+    "mtime": 1793095057.139177,
+    "seen": 1793881112.6499877,
+    "ast_hash": "77646f9c1bb2fed4dbd011f9339cf845",
+    "semantic_hash": ""
+  },
+  "cisco-pkt-builder/ACCEPTANCE.md": {
+    "mtime": 1793093177.0468545,
+    "seen": 1793881112.6499877,
+    "ast_hash": "f103207111a799bd1ef1f09a093fec3f",
+    "semantic_hash": ""
+  },
+  "cisco-pkt-builder/AGENTS.md": {
+    "mtime": 1792901858.942706,
+    "seen": 1793881112.6499877,
+    "ast_hash": "49c2525b6a817010c8c4f808d88598c5",
+    "semantic_hash": ""
+  },
+  "cisco-pkt-builder/COMMANDS.md": {
+    "mtime": 1793096026.485792,
+    "seen": 1793881112.6499877,
+    "ast_hash": "18b2f436be7ed515c1596b561537bc56",
+    "semantic_hash": ""
+  },
+  "cisco-pkt-builder/COMPATIBILITY.md": {
+    "mtime": 1793094629.5563338,
+    "seen": 1793881112.6499877,
+    "ast_hash": "fb9fc005351ba3c2addd906813f6828d",
+    "semantic_hash": ""
+  },
+  "cisco-pkt-builder/README.md": {
+    "mtime": 1793882299.0434515,
+    "seen": 1793882322.430522,
+    "ast_hash": "1bd9750a1e7cdf2ae668f1b62fb8c426",
+    "semantic_hash": ""
+  },
+  "cisco-pkt-builder/SKILL.md": {
+    "mtime": 1793882069.3636029,
+    "seen": 1793882322.430522,
+    "ast_hash": "f23aacfa851bec413219485e5d88e7b4",
+    "semantic_hash": ""
+  },
+  "cisco-pkt-builder/THIRD_PARTY.md": {
+    "mtime": 1792902714.7485285,
+    "seen": 1793881112.6499877,
+    "ast_hash": "9c059b5719a9ca8d4d875a7d4ea99412",
+    "semantic_hash": ""
+  },
+  "cisco-pkt-builder/TOKEN_EFFICIENCY.md": {
+    "mtime": 1793096053.2053998,
+    "seen": 1793881112.6499877,
+    "ast_hash": "b3c37dbdc41115f64d1ab6516da6f7e0",
+    "semantic_hash": ""
+  },
+  "cisco-pkt-builder/references/analysis.md": {
+    "mtime": 1793882076.160753,
+    "seen": 1793882322.430522,
+    "ast_hash": "a9b93abefd924a00975abc0768b25d78",
+    "semantic_hash": ""
+  },
+  "cisco-pkt-builder/references/antigravity-gemini.md": {
+    "mtime": 1793096052.7886288,
+    "seen": 1793881112.6499877,
+    "ast_hash": "792f832299fe9602cffdf043166b41f9",
+    "semantic_hash": ""
+  },
+  "cisco-pkt-builder/references/codex-gpt.md": {
+    "mtime": 1793096052.3714552,
+    "seen": 1793881112.6499877,
+    "ast_hash": "d47c682d1b65d41314e0cf492fa63f78",
+    "semantic_hash": ""
+  },
+  "cisco-pkt-builder/references/requirements.md": {
+    "mtime": 1793096026.0424163,
+    "seen": 1793881112.6499877,
+    "ast_hash": "80a872c5d0ef2847662594d8a5bfd473",
+    "semantic_hash": ""
+  },
+  "cisco-pkt-builder/requirements.txt": {
+    "mtime": 1792901401.8430212,
+    "seen": 1793881112.6499877,
+    "ast_hash": "d20e5228b122c5d5ab4f5b61ebb42be4",
+    "semantic_hash": ""
+  }
+}

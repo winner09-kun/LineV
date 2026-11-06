@@ -51,7 +51,7 @@ class CommandTests(unittest.TestCase):
 
     def test_child_preserves_isolation_and_uses_utf8(self):
         from types import SimpleNamespace
-        with patch.object(pkt.sys, "flags", SimpleNamespace(no_site=1)), \
+        with patch.object(pkt.sys, "flags", SimpleNamespace(no_site=1, ignore_environment=0)), \
              patch.object(pkt.sys, "dont_write_bytecode", True), \
              patch.object(pkt.subprocess, "run", return_value=subprocess.CompletedProcess([], 0)) as run:
             self.assertEqual(pkt.main(["validate", "lab.yaml"]), 0)

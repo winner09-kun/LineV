@@ -79,6 +79,14 @@ def ios_config(d, spec):
     for p, a in sorted(d["interfaces"].items()):
         a = address(a)
         lines += [f"interface {p}", f" ip address {a.ip} {a.netmask}", " no shutdown", " exit"]
+    subinterfaces = d.get("subinterfaces", {})
+    for parent in sorted({name.rpartition(".")[0] for name in subinterfaces}):
+        if parent not in d["interfaces"]:
+            lines += [f"interface {parent}", " no shutdown", " exit"]
+    for name, sub in sorted(subinterfaces.items(), key=lambda item: (item[1]["vlan"], item[0])):
+        a = address(sub["ip"])
+        encapsulation = f"encapsulation dot1Q {sub['vlan']}" + (" native" if sub["native"] else "")
+        lines += [f"interface {name}", f" {encapsulation}", f" ip address {a.ip} {a.netmask}", " no shutdown", " exit"]
     for p, mode in sorted(d["ports"].items()):
         lines += [f"interface {p}", f" switchport mode {mode['mode']}"]
         if mode["mode"] == "access":
@@ -128,9 +136,15 @@ def clean_model(data):
         for e in eng.findall(tag):
             e.clear()
     for p in root.iter("PORT"):
-        for tag in ("IP", "SUBNET", "PORT_GATEWAY", "PORT_DNS", "IPV6_LINK_LOCAL", "IPV6_DEFAULT_LINK_LOCAL"):
+        for tag in ("IP", "SUBNET", "PORT_GATEWAY", "PORT_DNS", "DNS",
+                    "DHCP_SERVER_IP", "IPV6_LINK_LOCAL", "IPV6_DEFAULT_LINK_LOCAL"):
             set_text(p, tag, "")
         set_text(p, "PORT_DHCP_ENABLE", "false")
+    for client in root.iter("DNS_CLIENT"):
+        for tag in ("SERVER_IP", "SERVER_IPV6"):
+            node = client.find(tag)
+            if node is not None:
+                node.text = ""
     # Server service payloads are outside MVP; do not inherit donor records/users.
     for tag in ("HTTP_SERVER", "HTTPS_SERVER", "DNS_SERVER", "DHCP_SERVERS", "DHCPV6_SERVER_LIST", "TFTP_SERVER", "FTP_SERVER", "NTP_SERVER", "SYSLOG_SERVER", "ACS_SERVER", "EMAIL_SERVER"):
         for service in eng.findall(tag):
@@ -140,6 +154,30 @@ def clean_model(data):
                 if e.tag in ("POOLS", "NAMESERVER-DATABASE", "USERS", "CLIENTS", "ACCOUNTS"):
                     e.clear()
     return ET.tostring(root)
+
+def configure_services(eng, services):
+    """Apply explicit service policy; never inherit donor pages or records."""
+    http = eng.find("HTTP_SERVER")
+    if http is not None:
+        set_text(http, "ENABLED", "1" if services["http"] else "0")
+    https = eng.find("HTTPS_SERVER")
+    if https is not None:
+        set_text(https, "HTTPSENABLED", "1" if services["https"] else "0")
+    dns = eng.find("DNS_SERVER")
+    if dns is None:
+        return
+    records = services["dns"]
+    set_text(dns, "ENABLED", "1" if records else "0")
+    database = dns.find("NAMESERVER-DATABASE")
+    if database is None:
+        database = ET.SubElement(dns, "NAMESERVER-DATABASE")
+    database.clear()
+    for name, record_ip in sorted(records.items()):
+        record = ET.SubElement(database, "RESOURCE-RECORD")
+        ET.SubElement(record, "TYPE").text = "A-REC"
+        ET.SubElement(record, "NAME").text = name
+        ET.SubElement(record, "TTL").text = "86400"
+        ET.SubElement(record, "IPADDRESS").text = record_ip
 
 def build(spec, template_dir=None):
     s = normalize(spec)
@@ -183,6 +221,15 @@ def build(spec, template_dir=None):
         set_text(eng, "SYS_NAME", d["id"])
         if host:
             set_text(eng, "GATEWAY", d.get("gateway", ""))
+            if d.get("dns"):
+                port = el.find(".//PORT")
+                set_text(port, "PORT_DNS", d["dns"])
+                dns_client = eng.find("DNS_CLIENT")
+                if dns_client is None:
+                    dns_client = ET.SubElement(eng, "DNS_CLIENT")
+                set_text(dns_client, "SERVER_IP", d["dns"])
+            if d["type"] == "server":
+                configure_services(eng, d["services"])
         else:
             configs[d["id"]] = "\n".join(cli) + "\n"
             # Keep initial config and persistent config aligned.
@@ -229,6 +276,17 @@ def summary(s):
             lines += [f"| {d['id']} | {p} | {a} | — |"]
         if "ip" in d:
             lines += [f"| {d['id']} | FastEthernet0 | {d['ip']} | {d.get('gateway', '—')} |"]
+    subinterfaces = [(d["id"], name, sub) for d in s["devices"]
+                     for name, sub in d.get("subinterfaces", {}).items()]
+    if subinterfaces:
+        lines += ["", "## Subinterface 802.1Q", "", "| Router | Subinterface | VLAN | IPv4 | Native |", "|---|---|---|---|---|"]
+        lines += [f"| {dev} | {name} | {sub['vlan']} | {sub['ip']} | {'ya' if sub['native'] else 'tidak'} |"
+                  for dev, name, sub in subinterfaces]
+    servers = [(d["id"], d["services"]) for d in s["devices"] if d["type"] == "server"]
+    if servers:
+        lines += ["", "## Layanan Server", "", "| Server | HTTP | HTTPS | DNS A-record |", "|---|---|---|---|"]
+        lines += [f"| {dev} | {'ya' if svc['http'] else 'tidak'} | {'ya' if svc['https'] else 'tidak'} | {len(svc['dns'])} |"
+                  for dev, svc in servers]
     lines += ["", "| Dari | Ke | Kabel |", "|---|---|---|"]
     lines += [f"| {l['from']} | {l['to']} | {l['cable']} |" for l in s["links"]]
     bgp = [d for d in s["devices"] if "bgp" in d["config"]]

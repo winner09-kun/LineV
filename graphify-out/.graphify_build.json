@@ -1,0 +1,1 @@
+{"excludes": ["cisco-pkt-builder/vendor/**", ".codex/**", ".agents/**", "qa/**", "research/**", "hasil/**", "*.xml", "*.pkt", "*.zip"], "code_only": true}

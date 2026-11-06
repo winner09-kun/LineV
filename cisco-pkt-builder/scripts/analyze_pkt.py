@@ -14,7 +14,7 @@ from pkt_core.errors import PacketTracerError
 
 def port_name(value):
     for short, full in (("Fa", "FastEthernet"), ("Gi", "GigabitEthernet"), ("Se", "Serial")):
-        if re.fullmatch(short + r"\d[\d/]*", value):
+        if re.fullmatch(short + r"\d[\d/]*(?:\.\d+)?", value):
             return full + value[len(short):]
     return value
 
@@ -113,6 +113,10 @@ def analyze_xml(xml):
                 address(*match.groups(), dev, section, f"running-config baris {lineno}")
             elif section in dev["interfaces"] and line in ("shutdown", "no shutdown"):
                 dev["interfaces"][section]["shutdown"] = line == "shutdown"
+            elif section in dev["interfaces"] and re.fullmatch(r"encapsulation dot1Q \d+( native)?", line):
+                parts = line.split()
+                dev["interfaces"][section]["vlan"] = int(parts[2])
+                dev["interfaces"][section]["native"] = parts[-1] == "native"
             elif section == "bgp" and re.fullmatch(r"neighbor \S+ remote-as \d+", line):
                 parts = line.split()
                 neighbors.append((dev, parts[1], int(parts[3]), lineno))
@@ -151,6 +155,19 @@ def analyze_xml(xml):
     for dev in devices:
         if not any(key[0] == dev["id"] for key in endpoints):
             finding("no_mapped_link", "warning", dev["id"], "Tidak ada kabel yang berhasil dipetakan", "Periksa apakah perangkat sengaja terisolasi atau memakai koneksi wireless/format lain.")
+        for iface_name, iface in dev["interfaces"].items():
+            if "." not in iface_name:
+                continue
+            suffix = iface_name.rpartition(".")[2]
+            has_ip = any(row["port"] == iface_name for row in dev["addresses"])
+            if "vlan" not in iface:
+                if has_ip:
+                    finding("subinterface_without_encapsulation", "warning", dev["id"], iface_name,
+                            "Tambahkan encapsulation dot1Q <vlan> jika subinterface ini dimaksudkan untuk VLAN 802.1Q.")
+                continue
+            if suffix.isdigit() and int(suffix) != iface["vlan"]:
+                finding("subinterface_vlan_mismatch", "warning", dev["id"], f"{iface_name}: encapsulation dot1Q {iface['vlan']}",
+                        "Samakan nomor VLAN pada nama subinterface dan encapsulation, atau periksa desainnya.")
     ips = defaultdict(list)
     for row in addresses:
         ips[str(row["address"].ip)].append(row)

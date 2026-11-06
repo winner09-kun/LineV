@@ -26,9 +26,24 @@ def token(value, context):
 def port_name(value):
     require(isinstance(value, str), "Nama port harus teks")
     for short, full in (("Gi", "GigabitEthernet"), ("Fa", "FastEthernet"), ("Se", "Serial")):
-        if re.fullmatch(short + r"\d+(?:/\d+)*", value):
+        if re.fullmatch(short + r"\d+(?:/\d+)*(?:\.\d+)?", value):
             return full + value[len(short):]
     return value
+
+def split_subinterface(value, context):
+    """Canonicalise ``Gi0/1.10`` and return (name, parent, vlan).
+
+    The VLAN lives in the interface name (Cisco convention) so it cannot drift
+    from the config generator's output.
+    """
+    require(isinstance(value, str), f"{context}: nama subinterface harus teks")
+    name = port_name(value)
+    parent, sep, suffix = name.rpartition(".")
+    require(bool(parent) and bool(sep) and suffix.isdigit() and str(int(suffix)) == suffix,
+            f"{context}: nama subinterface harus <port>.<vlan>")
+    number = int(suffix)
+    require(1 <= number <= 4094, f"{context}: VLAN subinterface tidak valid {suffix}")
+    return name, parent, number
 
 def ports(model, serial=False):
     # These PT modules encode names implicitly by model and slot order.
@@ -57,7 +72,7 @@ def normalize(spec):
     require(isinstance(s.get("links", []), list), "links harus list")
     devices, used_ips = {}, {}
     for i, d in enumerate(s["devices"]):
-        keys(d, "id type model position interfaces config vlans ports ip gateway module", "device")
+        keys(d, "id type model position interfaces config vlans ports ip gateway dns module subinterfaces services", "device")
         name = token(d.get("id"), "device.id")
         require(name not in devices, f"ID ganda: {name}")
         require(d.get("type") in MODELS, f"{name}: tipe tidak didukung")
@@ -86,9 +101,71 @@ def normalize(spec):
                     require(gw in a.network and gw != a.ip and gw not in (a.network.network_address, a.network.broadcast_address), f"{name}: gateway tidak valid atau beda subnet")
             else:
                 require("gateway" not in d, f"{name}: gateway memerlukan ip")
+            if "dns" in d:
+                require("ip" in d, f"{name}: dns memerlukan ip")
+                require(isinstance(d["dns"], str), f"{name}: dns harus alamat IPv4")
+                ip.IPv4Address(d["dns"])
         else:
             require("ip" not in d and "gateway" not in d, f"{name}: gunakan interfaces untuk router")
-        for a in list(d["interfaces"].values()) + ([d["ip"]] if "ip" in d else []):
+            require("dns" not in d, f"{name}: dns hanya untuk PC/server")
+        records = {}
+        if "services" in d:
+            require(d["type"] == "server", f"{name}: services hanya untuk server")
+            raw_services = d["services"]
+            require(isinstance(raw_services, dict), f"{name}: services harus mapping")
+            keys(raw_services, "http https dns", f"{name}.services")
+            http_on = raw_services.get("http", True)
+            https_on = raw_services.get("https", True)
+            require(type(http_on) is bool, f"{name}.services: http harus boolean")
+            require(type(https_on) is bool, f"{name}.services: https harus boolean")
+            raw_dns = raw_services.get("dns", {})
+            require(isinstance(raw_dns, dict), f"{name}.services: dns harus mapping nama: IPv4")
+            for record_name, record_ip in raw_dns.items():
+                require(isinstance(record_name, str) and re.fullmatch(
+                    r"(?=.{1,253}\Z)(?!-)[A-Za-z0-9-]{1,63}(?<!-)(?:\.(?!-)[A-Za-z0-9-]{1,63}(?<!-))*",
+                    record_name), f"{name}.services: nama DNS tidak valid {record_name}")
+                require(isinstance(record_ip, str), f"{name}.services: IP record {record_name} harus teks")
+                try:
+                    records[record_name] = str(ip.IPv4Address(record_ip))
+                except ValueError as exc:
+                    raise ValueError(f"{name}.services: IP record {record_name} tidak valid: {exc}") from None
+        if d["type"] == "server":
+            services = d.get("services", {})
+            d["services"] = {
+                "http": services.get("http", True),
+                "https": services.get("https", True),
+                "dns": records,
+            }
+        else:
+            d.pop("services", None)
+        raw_subs = d.get("subinterfaces", {})
+        require(isinstance(raw_subs, dict), f"{name}: subinterfaces harus mapping")
+        require(not raw_subs or d["type"] == "router", f"{name}: subinterface hanya untuk router")
+        d["subinterfaces"] = {}
+        native_parents = set()
+        for raw_name, raw_sub in raw_subs.items():
+            sub_name, parent, vlan_id = split_subinterface(raw_name, f"{name}.subinterface")
+            require(not parent.startswith("Serial"), f"{name}: subinterface 802.1Q memerlukan port Ethernet")
+            require(parent in valid_ports, f"{name}: parent subinterface tidak valid {parent}")
+            require(sub_name not in d["subinterfaces"], f"{name}: subinterface ganda {sub_name}")
+            if isinstance(raw_sub, str):
+                ip_value, native = raw_sub, False
+            else:
+                keys(raw_sub, "ip native vlan", f"{name}.{sub_name}")
+                ip_value = raw_sub.get("ip")
+                native = raw_sub.get("native", False)
+                if "vlan" in raw_sub:
+                    require(raw_sub["vlan"] == vlan_id,
+                            f"{name}.{sub_name}: vlan tidak cocok dengan nama subinterface")
+                require(type(native) is bool, f"{name}.{sub_name}: native harus boolean")
+            address(ip_value)
+            if native:
+                require(parent not in native_parents,
+                        f"{name}: hanya satu subinterface native per parent {parent}")
+                native_parents.add(parent)
+            d["subinterfaces"][sub_name] = {"ip": ip_value, "vlan": vlan_id, "native": native}
+        for a in (list(d["interfaces"].values()) + ([d["ip"]] if "ip" in d else [])
+                  + [sub["ip"] for sub in d["subinterfaces"].values()]):
             host = str(address(a).ip)
             require(host not in used_ips, f"IP ganda {host}: {used_ips.get(host)} dan {name}")
             used_ips[host] = name

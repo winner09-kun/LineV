@@ -49,6 +49,23 @@ class AnalyzeTests(unittest.TestCase):
         self.assertIn("link_subnet_mismatch", self.codes(fixture().replace(b"ip address 10.0.0.2", b"ip address 10.1.0.2")))
         self.assertIn("possible_bgp_as_mismatch", self.codes(fixture().replace(b"remote-as 200", b"remote-as 300")))
 
+    def test_subinterface_encapsulation_findings(self):
+        def with_subinterface(lines):
+            root = ET.fromstring(fixture())
+            eng = root.find("NETWORK/DEVICES/DEVICE/ENGINE")
+            for section in ("RUNNINGCONFIG", "STARTUPCONFIG"):
+                parent = eng.find(section)
+                for line in lines:
+                    ET.SubElement(parent, "LINE").text = line
+            return ET.tostring(root)
+
+        self.assertIn("subinterface_vlan_mismatch", self.codes(with_subinterface([
+            "interface GigabitEthernet0/1.10", "encapsulation dot1Q 11",
+            "ip address 192.168.20.1 255.255.255.0", "no shutdown"])))
+        self.assertIn("subinterface_without_encapsulation", self.codes(with_subinterface([
+            "interface GigabitEthernet0/1.10",
+            "ip address 192.168.20.1 255.255.255.0", "no shutdown"])))
+
     def test_duplicate_invalid_and_reserved_ips(self):
         self.assertIn("possible_duplicate_ip", self.codes(fixture().replace(b"ip address 10.0.0.2", b"ip address 10.0.0.1")))
         self.assertIn("invalid_ipv4", self.codes(fixture().replace(b"255.255.255.252", b"255.0.255.0")))
